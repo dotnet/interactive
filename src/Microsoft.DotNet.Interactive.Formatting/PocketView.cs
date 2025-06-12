@@ -46,6 +46,8 @@ public class PocketView : DynamicObject, IHtmlContent
         
     public HtmlTag HtmlTag { get; }
 
+    public DisplayedValue Display() => this.Display("text/html");
+
     /// <summary>
     /// Writes an element.
     /// </summary>

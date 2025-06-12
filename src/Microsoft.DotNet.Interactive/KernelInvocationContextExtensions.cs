@@ -30,12 +30,24 @@ public static class KernelInvocationContextExtensions
         this KernelInvocationContext context,
         DisplayedValue displayedValue)
     {
-        context.Publish(
-            new DisplayedValueProduced(
-                displayedValue.Value,
-                context.CurrentlyExecutingCommand,
-                displayedValue.FormattedValues,
-                displayedValue.DisplayId));
+        if (!displayedValue.IsUpdated)
+        {
+            context.Publish(
+                new DisplayedValueProduced(
+                    displayedValue.Value,
+                    context.CurrentlyExecutingCommand,
+                    displayedValue.FormattedValues,
+                    displayedValue.DisplayId));
+        }
+        else
+        {
+            context.Publish(
+                new DisplayedValueUpdated(
+                    displayedValue.Value,
+                    displayedValue.DisplayId,
+                    context.CurrentlyExecutingCommand,
+                    displayedValue.FormattedValues));
+        }
     }
 
     public static DisplayedValue DisplayAs(

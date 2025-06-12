@@ -7,6 +7,13 @@ Microsoft.DotNet.Interactive.Formatting
     public System.Collections.Generic.ICollection<System.String> Keys { get;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Destructure(T instance)
     public System.Object GetValue(T instance, System.String propertyName)
+  public class DisplayedValue
+    .ctor(System.Object value, System.Collections.Generic.IReadOnlyList<FormattedValue> formattedValues)
+    public System.String DisplayId { get;}
+    public System.Collections.Generic.IReadOnlyList<FormattedValue> FormattedValues { get;}
+    public System.Boolean IsUpdated { get;}
+    public System.Object Value { get;}
+    public System.Void Update(System.Object updatedValue)
   public class FormatContext, System.IDisposable
     .ctor(System.IO.TextWriter writer)
     public System.Int32 Depth { get;}
@@ -17,6 +24,14 @@ Microsoft.DotNet.Interactive.Formatting
     public System.IAsyncResult BeginInvoke(T value, FormatContext context, System.AsyncCallback callback, System.Object object)
     public System.Boolean EndInvoke(System.IAsyncResult result)
     public System.Boolean Invoke(T value, FormatContext context)
+  public class FormattedValue
+    public static System.Collections.Generic.IReadOnlyList<FormattedValue> CreateManyFromObject(System.Object value, System.String[] mimeTypes)
+    public static FormattedValue CreateSingleFromObject(System.Object value, System.String mimeType = null)
+    .ctor(System.String mimeType, System.String value)
+    public System.String MimeType { get;}
+    public System.Boolean SuppressDisplay { get; set;}
+    public System.String Value { get;}
+    public System.String ToString()
   public static class Formatter
     public static System.String DefaultMimeType { get; set;}
     public static System.Int32 ListExpansionLimit { get; set;}
@@ -35,6 +50,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.Collections.Generic.IEnumerable<ITypeFormatter> RegisteredFormatters(System.Boolean includeDefaults = True)
     public static System.Void ResetToDefault()
     public static System.Void SetPreferredMimeTypesFor(System.Type type, System.String[] preferredMimeTypes)
+    public static System.IDisposable SubscribeToDisplayedValues(System.Action<DisplayedValue> onEvent)
     public static System.String ToDisplayString(System.String mimeType = text/plain)
     public static System.String ToDisplayString(ITypeFormatter formatter)
   public static class Formatter<T>
@@ -166,6 +182,7 @@ Microsoft.DotNet.Interactive.Formatting
     public HtmlAttributes HtmlAttributes { get;}
     public HtmlTag HtmlTag { get;}
     public System.Void AddDependency(System.String id, Microsoft.AspNetCore.Html.IHtmlContent content)
+    public DisplayedValue Display()
     public System.Void SetContent(System.Object[] args)
     public System.String ToString()
     public System.Boolean TryGetIndex(System.Dynamic.GetIndexBinder binder, System.Object[] values, ref System.Object& result)
@@ -326,3 +343,8 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
   public class TabularDataResourceJsonString : Microsoft.DotNet.Interactive.Formatting.JsonString, Microsoft.AspNetCore.Html.IHtmlContent
     public static TabularDataResourceJsonString Create(System.Collections.Generic.IReadOnlyDictionary<System.String,System.Type> fields, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<System.String,System.Object>> data)
     .ctor(System.String json)
+System
+  public static class DisplayExtensions
+    public static Microsoft.DotNet.Interactive.Formatting.DisplayedValue Display(String[] mimeTypes)
+    public static Microsoft.DotNet.Interactive.Formatting.DisplayedValue DisplayAs(String mimeType)
+    public static Microsoft.DotNet.Interactive.Formatting.DisplayedValue DisplayTable<T>(String[] mimeTypes)

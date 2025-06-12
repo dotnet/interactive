@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
@@ -19,6 +20,24 @@ public static partial class Formatter
 
     internal static void RaiseFormatterEvent(DisplayedValue displayedValue)
     {
-        OnFormatterEvent?.Invoke(displayedValue);
+        if (OnFormatterEvent is { } handler)
+        {
+            handler(displayedValue);
+        }
+        else
+        {
+            WriteToConsole(displayedValue);
+        }
+    }
+
+    public static void WriteToConsole(DisplayedValue displayedValue)
+    {
+        var formattedValue = displayedValue.FormattedValues.FirstOrDefault(v => v.MimeType == PlainTextFormatter.MimeType) ??
+                             displayedValue.FormattedValues.FirstOrDefault();
+
+        if (formattedValue?.Value is { } value)
+        {
+            Console.WriteLine(value);
+        }
     }
 }

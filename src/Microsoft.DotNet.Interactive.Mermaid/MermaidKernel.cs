@@ -4,6 +4,7 @@
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Mermaid;
 
