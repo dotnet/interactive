@@ -530,7 +530,7 @@ f();"
               .Should()
               .ContainSingle(v =>
                                  v.MimeType == "text/html" &&
-                                 v.Value.ToString().Contains("<h1>hello!</h1>"));
+                                 v.Value.ToString().Contains("<h2>hello?</h2>"));
     }
 
     [Fact]

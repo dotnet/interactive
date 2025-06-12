@@ -7,6 +7,7 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing;
 

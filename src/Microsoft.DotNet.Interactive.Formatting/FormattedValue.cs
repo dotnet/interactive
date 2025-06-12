@@ -4,11 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.Formatting;
 
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.Formatting;
 
-// FIX: move namespace
 public class FormattedValue
 {
     public FormattedValue(string mimeType, string value)

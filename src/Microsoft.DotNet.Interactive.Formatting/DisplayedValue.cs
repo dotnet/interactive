@@ -4,10 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.Formatting;
 
-// FIX: adjust namespace
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.Formatting;
 
 public class DisplayedValue
 {

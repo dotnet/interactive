@@ -23,6 +23,7 @@ public partial class Kernel
 
     public static Kernel Root => KernelInvocationContext.Current.HandlingKernel?.RootKernel;
 
+    // FIX: (Kernel) move some of these display methods into Formatting and/or obsolete them
     public static DisplayedValue display(
         object value,
         params string[] mimeTypes)
@@ -155,13 +156,7 @@ public partial class Kernel
         }
         else
         {
-            var formattedValue = displayedValue.FormattedValues.FirstOrDefault(v => v.MimeType == PlainTextFormatter.MimeType) ??
-                                 displayedValue.FormattedValues.FirstOrDefault();
-
-            if (formattedValue?.Value is { } value)
-            {
-                Console.WriteLine(value);
-            }
+            Formatter.WriteToConsole(displayedValue);
         }
     }
 
