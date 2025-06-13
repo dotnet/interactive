@@ -53,6 +53,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.IDisposable SubscribeToDisplayedValues(System.Action<DisplayedValue> onEvent)
     public static System.String ToDisplayString(System.String mimeType = text/plain)
     public static System.String ToDisplayString(ITypeFormatter formatter)
+    public static System.Void WriteToConsole(DisplayedValue displayedValue)
   public static class Formatter<T>
     public static System.Int32 ListExpansionLimit { get; set;}
     public static System.Void FormatTo(T obj, FormatContext context, System.String mimeType = text/plain)
