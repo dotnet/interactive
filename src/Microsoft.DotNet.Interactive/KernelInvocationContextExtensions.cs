@@ -19,16 +19,35 @@ public static class KernelInvocationContextExtensions
     {
         var formattedValues = FormattedValue.CreateManyFromObject(value, mimeTypes).ToArray();
 
-        var displayedValue = new DisplayedValue(formattedValues, context);
+        var displayedValue = new DisplayedValue(value, formattedValues);
 
-        context.Publish(
-            new DisplayedValueProduced(
-                value,
-                context?.CurrentlyExecutingCommand,
-                formattedValues,
-                displayedValue.DisplayId));
+        context.Display(displayedValue);
 
         return displayedValue;
+    }
+
+    internal static void Display(
+        this KernelInvocationContext context,
+        DisplayedValue displayedValue)
+    {
+        if (!displayedValue.IsUpdated)
+        {
+            context.Publish(
+                new DisplayedValueProduced(
+                    displayedValue.Value,
+                    context.CurrentlyExecutingCommand,
+                    displayedValue.FormattedValues,
+                    displayedValue.DisplayId));
+        }
+        else
+        {
+            context.Publish(
+                new DisplayedValueUpdated(
+                    displayedValue.Value,
+                    displayedValue.DisplayId,
+                    context.CurrentlyExecutingCommand,
+                    displayedValue.FormattedValues));
+        }
     }
 
     public static DisplayedValue DisplayAs(
@@ -52,7 +71,7 @@ public static class KernelInvocationContextExtensions
 
         var formattedValues = new[] { formattedValue };
 
-        var displayedValue = new DisplayedValue(formattedValues, context);
+        var displayedValue = new DisplayedValue(value, formattedValues);
 
         context.Publish(
             new DisplayedValueProduced(

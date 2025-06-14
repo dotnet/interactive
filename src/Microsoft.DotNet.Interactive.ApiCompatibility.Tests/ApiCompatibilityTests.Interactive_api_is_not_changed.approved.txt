@@ -47,22 +47,9 @@ Microsoft.DotNet.Interactive
     public Microsoft.CodeAnalysis.DiagnosticSeverity Severity { get;}
     public System.String ToString()
     public Diagnostic WithLinePositionSpan(LinePositionSpan linePositionSpan)
-  public class DisplayedValue
-    .ctor(System.Collections.Generic.IReadOnlyList<FormattedValue> formattedValues, KernelInvocationContext context)
-    public System.String DisplayId { get;}
-    public System.Collections.Generic.IReadOnlyList<FormattedValue> FormattedValues { get;}
-    public System.Void Update(System.Object updatedValue)
   public class EventRoutingSlip : RoutingSlip
     .ctor()
     public System.Void Stamp(System.Uri uri)
-  public class FormattedValue
-    public static System.Collections.Generic.IReadOnlyList<FormattedValue> CreateManyFromObject(System.Object value, System.String[] mimeTypes)
-    public static FormattedValue CreateSingleFromObject(System.Object value, System.String mimeType = null)
-    .ctor(System.String mimeType, System.String value)
-    public System.String MimeType { get;}
-    public System.Boolean SuppressDisplay { get; set;}
-    public System.String Value { get;}
-    public System.String ToString()
   public abstract class FrontendEnvironment
     public System.Threading.Tasks.Task ExecuteClientScript(System.String code, KernelInvocationContext context)
   public class HtmlKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
@@ -92,7 +79,7 @@ Microsoft.DotNet.Interactive
     public static Kernel Current { get;}
     public static Kernel Root { get;}
     public static System.Void CSS(System.String content)
-    public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
+    public static Microsoft.DotNet.Interactive.Formatting.DisplayedValue display(System.Object value, System.String[] mimeTypes)
     public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text)
     public static System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<System.String,System.String>> GetInputsAsync(System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Commands.InputDescription> inputDescriptions)
     public static System.Threading.Tasks.Task<PasswordString> GetPasswordAsync(System.String prompt = )
@@ -219,8 +206,8 @@ Microsoft.DotNet.Interactive
     public System.Void Publish(Microsoft.DotNet.Interactive.Events.KernelEvent event)
     public System.Void Publish(Microsoft.DotNet.Interactive.Events.KernelEvent event, System.Boolean publishOnAmbientContextOnly)
   public static class KernelInvocationContextExtensions
-    public static DisplayedValue Display(System.Object value, System.String[] mimeTypes)
-    public static DisplayedValue DisplayAs(System.String value, System.String mimeType)
+    public static Microsoft.DotNet.Interactive.Formatting.DisplayedValue Display(System.Object value, System.String[] mimeTypes)
+    public static Microsoft.DotNet.Interactive.Formatting.DisplayedValue DisplayAs(System.String value, System.String mimeType)
   public delegate KernelPipelineContinuation : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
     .ctor(System.Object object, System.IntPtr method)
     public System.IAsyncResult BeginInvoke(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context, System.AsyncCallback callback, System.Object object)
@@ -248,7 +235,7 @@ Microsoft.DotNet.Interactive
   public class KeyValueStoreKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor(System.String name = value, System.Net.Http.HttpClient httpClient = null)
     public Microsoft.DotNet.Interactive.Directives.KernelSpecifierDirective KernelSpecifierDirective { get;}
-    public System.Collections.Generic.IReadOnlyDictionary<System.String,FormattedValue> Values { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,Microsoft.DotNet.Interactive.Formatting.FormattedValue> Values { get;}
   public class LinePosition, System.IEquatable<LinePosition>
     public static LinePosition FromCodeAnalysisLinePosition(Microsoft.CodeAnalysis.Text.LinePosition linePosition)
     public static System.Boolean op_Equality(LinePosition left, LinePosition right)
@@ -293,8 +280,8 @@ Microsoft.DotNet.Interactive
     public System.String PackageVersion { get;}
     public System.String ToString()
   public class ParameterInformation
-    .ctor(System.String label, FormattedValue documentation)
-    public FormattedValue Documentation { get;}
+    .ctor(System.String label, Microsoft.DotNet.Interactive.Formatting.FormattedValue documentation)
+    public Microsoft.DotNet.Interactive.Formatting.FormattedValue Documentation { get;}
     public System.String Label { get;}
   public class PasswordString
     .ctor(System.String clearTextPassword)
@@ -319,8 +306,8 @@ Microsoft.DotNet.Interactive
     public System.String ScriptValue { get;}
     public System.Void WriteTo(System.IO.TextWriter writer, System.Text.Encodings.Web.HtmlEncoder encoder)
   public class SignatureInformation
-    .ctor(System.String label, FormattedValue documentation, System.Collections.Generic.IReadOnlyList<ParameterInformation> parameters)
-    public FormattedValue Documentation { get;}
+    .ctor(System.String label, Microsoft.DotNet.Interactive.Formatting.FormattedValue documentation, System.Collections.Generic.IReadOnlyList<ParameterInformation> parameters)
+    public Microsoft.DotNet.Interactive.Formatting.FormattedValue Documentation { get;}
     public System.String Label { get;}
     public System.Collections.Generic.IReadOnlyList<ParameterInformation> Parameters { get;}
   public class TabularDataResourceSummaryExplorer : DataExplorer<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource>
@@ -344,8 +331,8 @@ Microsoft.DotNet.Interactive.Commands
     .ctor(System.String message)
     public System.String Message { get;}
   public class DisplayValue : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.String valueId = null)
-    public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
+    .ctor(Microsoft.DotNet.Interactive.Formatting.FormattedValue formattedValue, System.String valueId = null)
+    public Microsoft.DotNet.Interactive.Formatting.FormattedValue FormattedValue { get;}
     public System.String ValueId { get;}
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class ImportDocument : KernelCommand, System.IEquatable<KernelCommand>
@@ -415,8 +402,8 @@ Microsoft.DotNet.Interactive.Commands
     public System.Nullable<System.Int32> InsertAtPosition { get; set;}
     public System.String KernelName { get;}
   public class SendValue : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(System.String name, System.Object value, Microsoft.DotNet.Interactive.FormattedValue formattedValue = null, System.String targetKernelName = null)
-    public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
+    .ctor(System.String name, System.Object value, Microsoft.DotNet.Interactive.Formatting.FormattedValue formattedValue = null, System.String targetKernelName = null)
+    public Microsoft.DotNet.Interactive.Formatting.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Object Value { get;}
   public class SubmitCode : KernelCommand, System.IEquatable<KernelCommand>
@@ -425,8 +412,8 @@ Microsoft.DotNet.Interactive.Commands
     public System.Collections.Generic.IDictionary<System.String,System.String> Parameters { get; set;}
     public System.String ToString()
   public class UpdateDisplayedValue : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.String valueId)
-    public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
+    .ctor(Microsoft.DotNet.Interactive.Formatting.FormattedValue formattedValue, System.String valueId)
+    public Microsoft.DotNet.Interactive.Formatting.FormattedValue FormattedValue { get;}
     public System.String ValueId { get;}
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
 Microsoft.DotNet.Interactive.Connection
@@ -598,26 +585,26 @@ Microsoft.DotNet.Interactive.Events
     public System.Collections.Generic.IEnumerable<CompletionItem> Completions { get;}
     public Microsoft.DotNet.Interactive.LinePositionSpan LinePositionSpan { get;}
   public class DiagnosticsProduced : KernelEvent
-    .ctor(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Diagnostic> diagnostics, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedDiagnostics, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    .ctor(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Diagnostic> diagnostics, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> formattedDiagnostics, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Diagnostic> Diagnostics { get;}
-    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> FormattedDiagnostics { get;}
+    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> FormattedDiagnostics { get;}
     public System.String ToString()
   public class DisplayedValueProduced : DisplayEvent
-    .ctor(System.Object value, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedValues = null, System.String valueId = null)
+    .ctor(System.Object value, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> formattedValues = null, System.String valueId = null)
   public class DisplayedValueUpdated : DisplayEvent
-    .ctor(System.Object value, System.String valueId, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedValues = null)
+    .ctor(System.Object value, System.String valueId, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> formattedValues = null)
   public abstract class DisplayEvent : KernelEvent
-    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> FormattedValues { get;}
+    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> FormattedValues { get;}
     public System.Object Value { get;}
     public System.String ValueId { get;}
     public System.String ToString()
   public class ErrorProduced : DisplayEvent
-    .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedValues = null)
+    .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> formattedValues = null)
     public System.String Message { get;}
     public System.String ToString()
   public class HoverTextProduced : KernelEvent
-    .ctor(Microsoft.DotNet.Interactive.Commands.RequestHoverText command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> content, Microsoft.DotNet.Interactive.LinePositionSpan linePositionSpan = null)
-    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> Content { get;}
+    .ctor(Microsoft.DotNet.Interactive.Commands.RequestHoverText command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> content, Microsoft.DotNet.Interactive.LinePositionSpan linePositionSpan = null)
+    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> Content { get;}
     public Microsoft.DotNet.Interactive.LinePositionSpan LinePositionSpan { get;}
   public class IncompleteCodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode)
@@ -653,7 +640,7 @@ Microsoft.DotNet.Interactive.Events
     public Microsoft.DotNet.Interactive.ResolvedPackageReference PackageReference { get;}
     public System.String ToString()
   public class ReturnValueProduced : DisplayEvent
-    .ctor(System.Object value, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedValues = null, System.String valueId = null)
+    .ctor(System.Object value, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> formattedValues = null, System.String valueId = null)
   public class SignatureHelpProduced : KernelEvent
     public static SignatureHelpProduced Empty(Microsoft.DotNet.Interactive.Commands.RequestSignatureHelp command)
     .ctor(Microsoft.DotNet.Interactive.Commands.RequestSignatureHelp command, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.SignatureInformation> signatures, System.Int32 activeSignatureIndex, System.Int32 activeParameterIndex)
@@ -661,15 +648,15 @@ Microsoft.DotNet.Interactive.Events
     public System.Int32 ActiveSignatureIndex { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.SignatureInformation> Signatures { get;}
   public class StandardErrorValueProduced : DisplayEvent
-    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedValues = null, System.String valueId = null)
+    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> formattedValues = null, System.String valueId = null)
   public class StandardOutputValueProduced : DisplayEvent
-    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedValues = null, System.String valueId = null)
+    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.FormattedValue> formattedValues = null, System.String valueId = null)
   public class ValueInfosProduced : KernelEvent
     .ctor(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> valueInfos, Microsoft.DotNet.Interactive.Commands.RequestValueInfos command)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> ValueInfos { get;}
   public class ValueProduced : KernelEvent
-    .ctor(System.Object value, System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, Microsoft.DotNet.Interactive.Commands.RequestValue command)
-    public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
+    .ctor(System.Object value, System.String name, Microsoft.DotNet.Interactive.Formatting.FormattedValue formattedValue, Microsoft.DotNet.Interactive.Commands.RequestValue command)
+    public Microsoft.DotNet.Interactive.Formatting.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Object Value { get;}
 Microsoft.DotNet.Interactive.Http
@@ -871,14 +858,9 @@ Microsoft.DotNet.Interactive.ValueSharing
     public System.Type Type { get;}
     public System.Object Value { get;}
   public class KernelValueInfo
-    .ctor(System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.Type type = null, System.String typeName = null)
-    public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
+    .ctor(System.String name, Microsoft.DotNet.Interactive.Formatting.FormattedValue formattedValue, System.Type type = null, System.String typeName = null)
+    public Microsoft.DotNet.Interactive.Formatting.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Collections.Generic.IReadOnlyCollection<System.String> PreferredMimeTypes { get; set;}
     public System.Type Type { get;}
     public System.String TypeName { get; set;}
-System
-  public static class DisplayExtensions
-    public static Microsoft.DotNet.Interactive.DisplayedValue Display(String[] mimeTypes)
-    public static Microsoft.DotNet.Interactive.DisplayedValue DisplayAs(String mimeType)
-    public static Microsoft.DotNet.Interactive.DisplayedValue DisplayTable<T>(String[] mimeTypes)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -16,6 +16,7 @@
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\DictionaryExtensions.cs" Link="Utility\DictionaryExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="Utility\NullableAttributes.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\Range.cs" Link="Utility\Range.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\StringExtensions.cs" Link="StringExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,7 +20,7 @@ public class DisplayTests
         using var subscription = ConsoleOutput.Subscribe(console => console.Out.Subscribe(s => output.Append(s)));
         var message = "Display me.";
 
-        var displayedValue = message.Display();
+        message.Display();
 
         output.ToString().Should().Be("Display me." + Environment.NewLine);
     }

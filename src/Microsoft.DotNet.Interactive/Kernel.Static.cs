@@ -23,6 +23,7 @@ public partial class Kernel
 
     public static Kernel Root => KernelInvocationContext.Current.HandlingKernel?.RootKernel;
 
+    // FIX: (Kernel) move some of these display methods into Formatting and/or obsolete them
     public static DisplayedValue display(
         object value,
         params string[] mimeTypes)
@@ -146,6 +147,18 @@ public partial class Kernel
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
                 .SelectMany(i => i.GenericTypeArguments)
                 .ToArray());
+
+    private static void OnDisplayedValue(DisplayedValue displayedValue)
+    {
+        if (KernelInvocationContext.Current is { } context)
+        {
+            context.Display(displayedValue);
+        }
+        else
+        {
+            Formatter.WriteToConsole(displayedValue);
+        }
+    }
 
     protected delegate Task SetValueAsyncDelegate(
         string name,

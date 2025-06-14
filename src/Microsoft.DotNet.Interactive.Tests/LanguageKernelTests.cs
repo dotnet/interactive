@@ -869,20 +869,20 @@ $${languageSpecificCode}
 
     [Theory]
     [InlineData(Language.CSharp, """
-                                 using Microsoft.DotNet.Interactive; 
+                                 using Microsoft.DotNet.Interactive.Formatting; 
                                  FormattedValue.CreateSingleFromObject(1)
                                  """)]
     [InlineData(Language.FSharp, """
-                                 open Microsoft.DotNet.Interactive
+                                 open Microsoft.DotNet.Interactive.Formatting
                                  FormattedValue.CreateSingleFromObject(1)
                                  """)]
                                 
     [InlineData(Language.CSharp, """
-                                 using Microsoft.DotNet.Interactive; 
+                                 using Microsoft.DotNet.Interactive.Formatting; 
                                  FormattedValue.CreateManyFromObject(1, "text/plain","application/json")
                                  """)]
     [InlineData(Language.FSharp, """
-                                 open Microsoft.DotNet.Interactive
+                                 open Microsoft.DotNet.Interactive.Formatting
                                  FormattedValue.CreateManyFromObject(1, "text/plain","application/json")
                                  """)]
                                  

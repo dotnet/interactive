@@ -3,6 +3,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 

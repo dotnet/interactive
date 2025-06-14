@@ -1,9 +1,7 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
@@ -21,32 +19,18 @@ public static class DisplayExtensions
         this object value,
         params string[] mimeTypes)
     {
-        if (KernelInvocationContext.Current is { } context)
-        {
-            return context.Display(value, mimeTypes);
-        }
-        else
-        {
-            var mimeType = mimeTypes?.FirstOrDefault() ?? "text/plain";
-            var output = value.ToDisplayString(mimeType);
-            Console.WriteLine(output);
-            return new DisplayedValue([new(mimeType, output)], KernelInvocationContext.None);
-        }
+        var formattedValues = FormattedValue.CreateManyFromObject(value, mimeTypes);
+        Formatter.RaiseFormatterEvent(new(value, formattedValues));
+        return new DisplayedValue(value, formattedValues);
     }
 
     public static DisplayedValue DisplayAs(
         this string value,
         string mimeType)
     {
-        if (KernelInvocationContext.Current is { } context)
-        {
-            return context.DisplayAs(value, mimeType);
-        }
-        else
-        {
-            Console.WriteLine(value);
-            return new DisplayedValue([new(mimeType, value)], KernelInvocationContext.None);
-        }
+        IReadOnlyList<FormattedValue> formattedValues = [new(mimeType, value)];
+        Formatter.RaiseFormatterEvent(new(value, formattedValues));
+        return new DisplayedValue(value, formattedValues);
     }
 
     public static DisplayedValue DisplayTable<T>(
