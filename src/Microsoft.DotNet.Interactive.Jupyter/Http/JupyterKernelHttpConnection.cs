@@ -170,7 +170,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    Log.Error(e, "Handled exception in Jupyter message loop", e, _socket);
+                    Log.Error("Handled exception in Jupyter message loop", e, _socket);
                 }
             }
         }
