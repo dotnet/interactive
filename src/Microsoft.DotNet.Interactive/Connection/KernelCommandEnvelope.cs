@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Web;
 using Microsoft.DotNet.Interactive.Commands;
 using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Connection.KernelCommandEnvelope>;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -191,7 +192,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         }
         catch (Exception exception)
         {
-            Logger.Log.Error(exception, "Error deserializing command envelope");
+            Log.Error("Error deserializing command envelope", exception);
             throw;
         }
     }

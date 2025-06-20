@@ -70,7 +70,7 @@ public class CSharpKernel :
         //...so we wait for RunAsync to read Directory.GetCurrentDirectory() the first time.
 
         _scriptOptions = ScriptOptions.Default
-            .WithLanguageVersion(LanguageVersion.CSharp13)
+            .WithLanguageVersion(LanguageVersion.Latest)
             .AddImports(
                 "System",
                 "System.Text",

@@ -107,7 +107,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         }
         catch (InvalidOperationException exception)
         {
-            Log.Warning(exception, _currentlyRunningOperation);
+            Log.Warning("Exception while awaiting child operations", exception, _currentlyRunningOperation);
         }
     }
 
