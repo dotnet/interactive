@@ -3,7 +3,8 @@
 
 using System;
 using System.IO;
-using System.Reactive.Disposables;
+using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
+using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Utility;
 

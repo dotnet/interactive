@@ -18,7 +18,7 @@ internal class MsSqlKernelConnector
 
     public string ConnectionString { get; }
 
-    public string PathToService { get; set; }
+    internal string PathToService { get; set; }
 
     public async Task<Kernel> CreateKernelAsync(string kernelName)
     {

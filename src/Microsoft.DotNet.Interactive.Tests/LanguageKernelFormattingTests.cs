@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -242,23 +241,23 @@ using {typeof(PocketView).Namespace};
             Language.FSharp => "let d = display(b [] [ str \"hello\"])\nd.Update(b [] [str \"world\"])",
         };
 
-        await kernel.SendAsync(new SubmitCode(submission));
+        var result = await kernel.SendAsync(new SubmitCode(submission));
 
-        KernelEvents
-            .OfType<DisplayedValueProduced>()
-            .SelectMany(v => v.FormattedValues)
-            .Should()
-            .ContainSingle(v =>
-                v.MimeType == "text/html" &&
-                v.Value.ToString().Contains("<b>hello</b>"));
+        result.Events
+              .OfType<DisplayedValueProduced>()
+              .SelectMany(v => v.FormattedValues)
+              .Should()
+              .ContainSingle(v =>
+                                 v.MimeType == "text/html" &&
+                                 v.Value.ToString().Contains("<b>hello</b>"));
 
-        KernelEvents
-            .OfType<DisplayedValueUpdated>()
-            .SelectMany(v => v.FormattedValues)
-            .Should()
-            .ContainSingle(v =>
-                v.MimeType == "text/html" &&
-                v.Value.ToString().Contains("<b>world</b>"));
+        result.Events
+              .OfType<DisplayedValueUpdated>()
+              .SelectMany(v => v.FormattedValues)
+              .Should()
+              .ContainSingle(v =>
+                                 v.MimeType == "text/html" &&
+                                 v.Value.ToString().Contains("<b>world</b>"));
     }
 
     [Theory]
@@ -508,6 +507,30 @@ f();"
             .ContainSingle(v =>
                 v.MimeType == "text/html" &&
                 v.Value.ToString().Contains(Formatter.NullString.HtmlEncode().ToString()));
+    }
+
+    [Fact]
+    public async Task PocketView_can_be_used_with_Display_extension_method()
+    {
+        var kernel = CreateKernel(Language.CSharp);
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+              using Microsoft.DotNet.Interactive.Formatting;
+
+              PocketViewTags.h2("hello?").Display();
+              """));
+
+        result.Events.Should().NotContainErrors();
+
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v =>
+                                 v.MimeType == "text/html" &&
+                                 v.Value.ToString().Contains("<h2>hello?</h2>"));
     }
 
     [Fact]

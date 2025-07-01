@@ -15,7 +15,7 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
-public static class Formatter
+public static partial class Formatter
 {
     private static int _defaultListExpansionLimit;
     private static int _recursionLimit;

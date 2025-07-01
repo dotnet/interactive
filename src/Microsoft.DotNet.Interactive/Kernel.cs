@@ -25,6 +25,7 @@ using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -47,6 +48,11 @@ public abstract partial class Kernel :
     private KernelInvocationContext _inFlightContext;
     private int _countOfLanguageServiceCommandsInFlight = 0;
     private readonly KernelInfo _kernelInfo;
+
+    static Kernel()
+    {
+        Formatter.SubscribeToDisplayedValues(OnDisplayedValue);
+    }
 
     protected Kernel(string name)
     {
