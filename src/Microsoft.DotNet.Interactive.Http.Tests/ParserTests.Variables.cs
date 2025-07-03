@@ -300,6 +300,35 @@ public partial class HttpParserTests
         }
 
         [Fact]
+        public void escaping_double_curly_braces_with_a_backslash_produces_literal_double_braces_in_variable_value()
+        {
+            var result = Parse(
+                """
+
+                @text=\{{text}}
+                """
+                );
+
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
+            variables.Should().Contain(n => n.Key == "text").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("{{text}}");
+        }
+
+        [Fact]
+        public void escaping_triple_curly_braces_with_a_backslash_produces_literal_triple_braces_in_variable_value()
+        {
+            var result = Parse(
+                """
+
+                @text=\{{{text}}}
+                """
+                );
+
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
+            variables.Should().Contain(n => n.Key == "text").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("{{{text}}}");
+
+        }
+
+        [Fact]
         public void double_quotes_in_variable_values_are_supported()
         {
             var result = Parse(
