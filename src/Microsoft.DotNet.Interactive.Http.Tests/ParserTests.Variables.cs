@@ -300,12 +300,12 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public void double_braces_escaping_single_braces_are_supported()
+        public void escaping_double_curly_braces_with_a_backslash_produces_literal_double_braces_in_variable_value()
         {
             var result = Parse(
                 """
 
-                @text=\{{text\}}
+                @text=\{{text}}
                 """
                 );
 
@@ -314,12 +314,12 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public void triple_escaped_curly_braces_in_variable_values_are_supported()
+        public void escaping_triple_curly_braces_with_a_backslash_produces_literal_triple_braces_in_variable_value()
         {
             var result = Parse(
                 """
 
-                @text=\{{{text\}}}
+                @text=\{{{text}}}
                 """
                 );
 

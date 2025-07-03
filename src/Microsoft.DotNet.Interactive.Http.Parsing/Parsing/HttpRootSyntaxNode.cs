@@ -62,7 +62,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                     {
                         if (child is HttpEscapedCharacterSequenceNode sequenceNode)
                         {
-                            sb.Append(sequenceNode.NonEscapedText);
+                            sb.Append(sequenceNode.UnescapedText);
                         }
                         else
                         {

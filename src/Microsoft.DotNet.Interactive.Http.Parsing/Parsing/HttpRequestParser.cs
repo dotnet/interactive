@@ -145,10 +145,10 @@ internal class HttpRequestParser
 
                         ParseLeadingWhitespaceAndComments(node);
                     }
-                    else if (IsStartOfEscapedCharacterSequence())
+                    else if (IsStartOfEscapeSequence())
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
-                        var escapedSequence = ParseEscapedCharacterSequence();
+                        var escapedSequence = ParseEscapeSequence();
                         node.Add(escapedSequence);
                     }
                     else if (IsAtStartOfEmbeddedExpression())
@@ -170,9 +170,9 @@ internal class HttpRequestParser
                 {
                     node.Add(ParseEmbeddedExpression());
                 }
-                else if (IsStartOfEscapedCharacterSequence())
+                else if (IsStartOfEscapeSequence())
                 {
-                    node.Add(ParseEscapedCharacterSequence());
+                    node.Add(ParseEscapeSequence());
                 }
                 else
                 {
@@ -551,12 +551,10 @@ internal class HttpRequestParser
             CurrentToken is { Text: "{" } &&
             CurrentTokenPlus(1) is { Text: "{" };
 
-        private bool IsStartOfEscapedCharacterSequence() =>
-            CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "\\" } &&
+        private bool IsStartOfEscapeSequence() =>
+            CurrentToken is { Kind: TokenKind.Punctuation } and { Text: @"\" } &&
             (CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "{" } &&
-            CurrentTokenPlus(2) is { Kind: TokenKind.Punctuation } and { Text: "{" }) ||
-            (CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "}" } &&
-            CurrentTokenPlus(2) is { Kind: TokenKind.Punctuation } and { Text: "}" });
+            CurrentTokenPlus(2) is { Kind: TokenKind.Punctuation } and { Text: "{" });
 
         private HttpEmbeddedExpressionNode ParseEmbeddedExpression()
         {
@@ -906,7 +904,7 @@ internal class HttpRequestParser
             return node;
         }
 
-        private HttpEscapedCharacterSequenceNode ParseEscapedCharacterSequence()
+        private HttpEscapedCharacterSequenceNode ParseEscapeSequence()
         {
             var node = new HttpEscapedCharacterSequenceNode(_sourceText, _syntaxTree);
 

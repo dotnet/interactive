@@ -12,6 +12,6 @@ internal class HttpEscapedCharacterSequenceNode : HttpSyntaxNode
     {
     }
 
-    public string NonEscapedText => Text.TrimStart('\\');
+    public string UnescapedText => Text.TrimStart('\\');
 
 }
