@@ -15,6 +15,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
 {
     public HttpRequestNodeSyntaxSpec(
         HttpCommentNodeSyntaxSpec commentNamedRequest,
+        HttpVariableDeclarationAndAssignmentNodeSyntaxSpec variableDeclarationAndAssignment,
         HttpMethodNodeSyntaxSpec method,
         HttpUrlNodeSyntaxSpec url,
         HttpVersionNodeSyntaxSpec version = null,
@@ -36,6 +37,8 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
     }
 
     public HttpCommentNodeSyntaxSpec CommentNamedRequest { get; }
+
+    public HttpVariableDeclarationAndAssignmentNodeSyntaxSpec VariableDeclarationAndAssignment { get; }
 
     public HttpMethodNodeSyntaxSpec Method { get; }
 
