@@ -69,6 +69,15 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
             CommentNamedRequest.Validate(syntaxNode: commentNode);
         }
 
+        if(!string.IsNullOrEmpty(VariableDeclarationAndAssignment?.Text))
+        {
+            var httpVariableDeclarationAndAssignmentNode = requestNode.ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>().SingleOrDefault();
+
+            httpVariableDeclarationAndAssignmentNode.Should().NotBeNull();
+
+            VariableDeclarationAndAssignment.Validate(httpVariableDeclarationAndAssignmentNode);
+        }   
+
         if (!string.IsNullOrEmpty(Method?.Text))
         {
             var httpMethodNode = requestNode.ChildNodes.OfType<HttpMethodNode>().SingleOrDefault();
