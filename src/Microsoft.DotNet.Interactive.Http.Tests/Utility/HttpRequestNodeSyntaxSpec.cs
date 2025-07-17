@@ -153,6 +153,12 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         sb.Append(MaybeLineComment());
         sb.Append(MaybeWhitespace());
 
+        if(VariableDeclarationAndAssignment is not null)
+        {
+            sb.Append(VariableDeclarationAndAssignment);
+            sb.AppendLine();
+        }
+        
         sb.Append(Method);
         sb.Append(" ");
         sb.Append(MaybeWhitespace());

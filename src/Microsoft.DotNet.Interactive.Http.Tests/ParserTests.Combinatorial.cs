@@ -230,22 +230,6 @@ public partial class HttpParserTests
                     generationNumber
                 };
             }
-
-            foreach (var namedRequest in ValidNamedRequests())
-            foreach (var variables in InvalidVariableDeclarations())
-            foreach (var method in ValidMethods())
-            foreach (var url in ValidUrls())
-            foreach (var version in ValidVersions())
-            foreach (var headerSection in ValidHeaderSections())
-            foreach (var bodySection in ValidBodySections())
-            {
-                ++generationNumber;
-                yield return new object[]
-                {
-                    new HttpRequestNodeSyntaxSpec(namedRequest, variables, method, url, version, headerSection, bodySection),
-                        generationNumber
-                };
-            }
         }
     }
 
