@@ -1,0 +1,9 @@
+<Project>
+    <PropertyGroup>
+        <RepoRoot>$(MSBuildThisFileDirectory)../../</RepoRoot>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(SignType)' == ''">
+        <SignType>test</SignType>
+    </PropertyGroup>
+</Project>

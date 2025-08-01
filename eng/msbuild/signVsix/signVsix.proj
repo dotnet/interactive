@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.Build.NoTargets">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateAssemblyVersionInfo>false</GenerateAssemblyVersionInfo>
+    <EnableDefaultSignFiles>false</EnableDefaultSignFiles>
+    <MicroBuild_DoNotStrongNameSign>true</MicroBuild_DoNotStrongNameSign>
+    <IsPackable>false</IsPackable>
+    <OutDir>$(RepoRoot)artifacts\vscode\</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <FilesToSign Include="$(OutDir)stable-locked\*.vsix">
+      <Authenticode>VSCodePublisher</Authenticode>
+    </FilesToSign>
+    <FilesToSign Include="$(OutDir)stable\*.vsix">
+      <Authenticode>VSCodePublisher</Authenticode>
+    </FilesToSign>
+    <FilesToSign Include="$(OutDir)insiders\*.vsix">
+      <Authenticode>VSCodePublisher</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+</Project>

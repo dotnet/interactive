@@ -1,5 +1,6 @@
 parameters:
   platform: ''
+  signType: ''
 
 steps:
 - ${{ if eq(parameters.platform, 'windows') }}:
@@ -51,6 +52,11 @@ steps:
       testResultsFiles: '**/*.*'
       searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
     condition: always()
+
+  - script: dotnet build $(Build.SourcesDirectory)\eng\msbuild\signVsix -bl -v:normal
+    displayName: Sign VS Code Extensions
+    env:
+      SignType: ${{ parameters.signType }}
 
   - task: PowerShell@2
     displayName: Pack VS Code Extensions
