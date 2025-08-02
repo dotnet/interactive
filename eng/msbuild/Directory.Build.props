@@ -6,4 +6,9 @@
     <PropertyGroup Condition="'$(SignType)' == ''">
         <SignType>test</SignType>
     </PropertyGroup>
+
+    <!-- The Arcade.SDK will error if this is unset. This is fixed in more recent Arcade builds. -->
+    <PropertyGroup Condition="'$(_SuppressSdkImports)' == ''">
+        <_SuppressSdkImports>true</_SuppressSdkImports>
+    </PropertyGroup>
 </Project>
