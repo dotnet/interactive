@@ -51,7 +51,7 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
   parameters:
     sdl:
-      sourceAnalysisPool: 
+      sourceAnalysisPool:
         name: $(DncEngInternalBuildPool)
         image: 1es-windows-2022
         os: windows
@@ -152,6 +152,7 @@ extends:
             - template: /eng/templates/build-and-test-tasks.yml@self
               parameters:
                 platform: windows
+                signType: $(_SignType)
 
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
@@ -212,7 +213,7 @@ extends:
             -TsaCodebaseName "Interactive-GitHub"
             -TsaPublish $True
             -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
-  
+
     #---------------------------------------------------------------------------------------------------------------------#
     #                                                    NPM Publish                                                      #
     #---------------------------------------------------------------------------------------------------------------------#
