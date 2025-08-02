@@ -30,13 +30,13 @@ function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDi
 
     # pack
     Write-Host "Packing extension"
-    npx @vscode/vsce@latest package -o "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
+    npm run package -- --out "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
 
     Write-Host "Generating extension manifest"
     npx @vscode/vsce@latest generate-manifest -i "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix" -o "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.manifest"
 
     Write-Host "Preparing manifest for signing"
-    cp "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.manifest" "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.signature.p7s"
+    Copy-Item -Path "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.manifest" -Destination "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.signature.p7s"
 
     Pop-Location
 }
