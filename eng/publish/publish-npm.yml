@@ -18,7 +18,7 @@ stages:
     variables:
     - group: AzureDevOps-Artifact-Feeds-Pats
     - name: NodeJSVersion
-      value: '12.16.1'
+      value: '22.18.0'
     steps:
     - task: NodeTool@0
       displayName: Add NodeJS/npm
