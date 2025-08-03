@@ -817,8 +817,8 @@
     "@types/uuid": "8.3.0",
     "@typescript-eslint/eslint-plugin": "5.3.0",
     "@typescript-eslint/parser": "5.3.0",
-    "@vscode/vsce": "2.16.0",
     "@vscode/l10n-dev": "0.0.18",
+    "@vscode/vsce": "3.6.0",
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
     "chai-fs": "2.0.0",
@@ -838,13 +838,13 @@
     "vscode-test": "1.6.1"
   },
   "dependencies": {
+    "@vscode/l10n": "0.0.10",
     "compare-versions": "3.6.0",
     "node-fetch": "2.6.7",
     "rxjs": "7.5.6",
     "uuid": "8.3.2",
     "vscode-oniguruma": "1.6.1",
     "vscode-textmate": "6.0.0",
-    "vscode-uri": "3.0.6",
-    "@vscode/l10n": "0.0.10"
+    "vscode-uri": "3.0.6"
   }
 }
