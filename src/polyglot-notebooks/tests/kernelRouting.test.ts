@@ -18,10 +18,10 @@ describe("kernelRouting", () => {
 
         let command = new commandsAndEvents.KernelCommandEnvelope(
             commandsAndEvents.SubmitCodeType,
-            <commandsAndEvents.SubmitCode>{
+            {
                 code: "return 12;",
                 targetKernelName: "javascript"
-            }
+            } as commandsAndEvents.SubmitCode
         );
 
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
@@ -53,10 +53,10 @@ describe("kernelRouting", () => {
 
         let command = new commandsAndEvents.KernelCommandEnvelope(
             commandsAndEvents.SubmitCodeType,
-            <commandsAndEvents.SubmitCode>{
+            {
                 code: "return 12;",
                 targetKernelName: "javascript"
-            }
+            } as commandsAndEvents.SubmitCode
         );
 
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
@@ -83,10 +83,10 @@ describe("kernelRouting", () => {
 
         let command = new commandsAndEvents.KernelCommandEnvelope(
             commandsAndEvents.SubmitCodeType,
-            <commandsAndEvents.SubmitCode>{
+            {
                 code: "return 12;",
                 targetKernelName: "javascript"
-            }
+            } as commandsAndEvents.SubmitCode
         );
 
         const inMemory = createInMemoryChannels();
@@ -130,10 +130,10 @@ describe("kernelRouting", () => {
 
         let command = new commandsAndEvents.KernelCommandEnvelope(
             commandsAndEvents.SubmitCodeType,
-            <commandsAndEvents.SubmitCode>{
+            {
                 code: "return 12;",
                 targetKernelName: "javascript"
-            }
+            } as commandsAndEvents.SubmitCode
         );
 
         const inMemory = createInMemoryChannels();

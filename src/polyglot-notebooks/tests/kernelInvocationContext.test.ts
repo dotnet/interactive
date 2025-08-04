@@ -31,9 +31,9 @@ describe("dotnet-interactive", () => {
 
             const command = new commandsAndEvents.KernelCommandEnvelope(
                 commandsAndEvents.SubmitCodeType,
-                <commandsAndEvents.SubmitCode>{
+                {
                     code: code
-                }
+                } as commandsAndEvents.SubmitCode
             );
             return command;
         }

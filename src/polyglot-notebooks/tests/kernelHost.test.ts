@@ -178,8 +178,8 @@ describe("kernelHost",
             vscodeHost.connect();
             remoteHost.connect();
 
-            const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "pytonCode", targetKernelName: "python" });
-            const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "goCode", targetKernelName: "go" });
+            const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "pytonCode", targetKernelName: "python" } as commandsAndEvents.SubmitCode);
+            const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "goCode", targetKernelName: "go" } as commandsAndEvents.SubmitCode);
             await vscodeKernel.send(command1);
             await vscodeKernel.send(command2);
 

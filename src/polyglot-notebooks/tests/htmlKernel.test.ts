@@ -32,8 +32,8 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0">a</div>' });
-        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0">b</div>' });
+        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="0">a</div>' } as commandsAndEvents.SubmitCode);
+        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="0">b</div>' } as commandsAndEvents.SubmitCode);
         await kernel.send(command1);
         await kernel.send(command2);
 
@@ -67,8 +67,8 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0">a</div>' });
-        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0">b</div>' });
+        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="0">a</div>' } as commandsAndEvents.SubmitCode);
+        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="0">b</div>' } as commandsAndEvents.SubmitCode);
 
         await kernel.send(command1);
         await kernel.send(command2);
@@ -116,7 +116,7 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>' });
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>' } as commandsAndEvents.SubmitCode);
         await kernel.send(command);
 
         const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === commandsAndEvents.DisplayedValueProducedType).at(-1)?.event as commandsAndEvents.DisplayedValueProduced;
@@ -163,8 +163,8 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div>' });
-        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="2">b</div>' });
+        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="1">a</div>' } as commandsAndEvents.SubmitCode);
+        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="2">b</div>' } as commandsAndEvents.SubmitCode);
 
         await kernel.send(command1);
         await kernel.send(command2);
@@ -197,8 +197,8 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div>' });
-        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="2">b</div>' });
+        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="1">a</div>' } as commandsAndEvents.SubmitCode);
+        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="2">b</div>' } as commandsAndEvents.SubmitCode);
 
         await kernel.send(command1);
         await kernel.send(command2);
@@ -231,7 +231,7 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' });
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="1">a</div><div id="2">b</div>' } as commandsAndEvents.SubmitCode);
         await kernel.send(command);
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
@@ -272,7 +272,7 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' });
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: '<div id="1">a</div><div id="2">b</div>' } as commandsAndEvents.SubmitCode);
 
         await kernel.send(command);
 
