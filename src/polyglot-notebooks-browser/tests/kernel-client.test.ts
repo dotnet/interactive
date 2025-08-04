@@ -35,7 +35,7 @@ describe("polyglot-notebooks", () => {
                 address: rootUrl,
                 channelFactory: async (url: string) => {
                     let mock = await createMockChannel(url);
-                    transport = <MockKernelCommandAndEventChannel>mock;
+                    transport = mock as MockKernelCommandAndEventChannel;
                     return mock;
                 }
             });
@@ -90,7 +90,7 @@ describe("polyglot-notebooks", () => {
                     address: rootUrl,
                     channelFactory: async (url: string) => {
                         let mock = await createMockChannel(url);
-                        transport = <MockKernelCommandAndEventChannel>mock;
+                        transport = mock as MockKernelCommandAndEventChannel;
                         return mock;
                     }
                 });
@@ -109,7 +109,7 @@ describe("polyglot-notebooks", () => {
                     address: rootUrl,
                     channelFactory: async (url: string) => {
                         let mock = await createMockChannel(url);
-                        transport = <MockKernelCommandAndEventChannel>mock;
+                        transport = mock as MockKernelCommandAndEventChannel;
                         return mock;
                     }
                 });
@@ -137,7 +137,7 @@ describe("polyglot-notebooks", () => {
                 address: rootUrl,
                 channelFactory: async (url: string) => {
                     let mock = await createMockChannel(url);
-                    transport = <MockKernelCommandAndEventChannel>mock;
+                    transport = mock as MockKernelCommandAndEventChannel;
                     return mock;
                 },
                 clientSideKernelFactory: async (kernelTransport) => {
@@ -180,7 +180,7 @@ describe("polyglot-notebooks", () => {
             let commandIn: CustomCommand = {
                 data: "Test"
             };
-            let commandType: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand";
+            let commandType: commandsAndEvents.KernelCommandType = "CustomCommand" as commandsAndEvents.KernelCommandType;
             let commandEnvelopeIn = new commandsAndEvents.KernelCommandEnvelope(
                 commandType,
                 commandIn
@@ -193,7 +193,7 @@ describe("polyglot-notebooks", () => {
 
             expect(commandsSentToKernel!.length).to.equal(1);
             expect(commandsSentToKernel![0].commandType).to.equal("CustomCommand");
-            let commandReceived = <CustomCommand>commandsSentToKernel![0].command;
+            let commandReceived = commandsSentToKernel![0].command as CustomCommand;
             expect(commandReceived.data).to.equal(commandIn.data);
 
             // TODO: what are the semantics around completion? With client-to-server submitCommand, at
@@ -210,7 +210,7 @@ describe("polyglot-notebooks", () => {
             let client = await makeClient();
             client.registerCommandHandler({
                 commandType: commandsAndEvents.SubmitCodeType, handle: (invocation) => {
-                    let submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
+                    let submitCode = invocation.commandEnvelope.command as commandsAndEvents.SubmitCode;
                     let event = new commandsAndEvents.KernelEventEnvelope(
                         commandsAndEvents.CodeSubmissionReceivedType,
                         {
@@ -224,8 +224,7 @@ describe("polyglot-notebooks", () => {
                 }
             });
 
-
-            const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "39 + 3" });
+            const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "39 + 3" } as commandsAndEvents.SubmitCode);
             transport!.fakeIncomingSubmitCommand(command);
 
             let eventIn: commandsAndEvents.CodeSubmissionReceived = {
@@ -241,7 +240,7 @@ describe("polyglot-notebooks", () => {
             const publishedEvents = transport!.eventsPublished.filter(e => e.eventType === eventEnvelopeIn.eventType);
             expect(publishedEvents.length).to.equal(1);
             expect(publishedEvents[0].eventType).to.be.equal(eventEnvelopeIn.eventType);
-            const eventPublished = <commandsAndEvents.CodeSubmissionReceived>publishedEvents[0].event;
+            const eventPublished = publishedEvents[0].event as commandsAndEvents.CodeSubmissionReceived;
             expect(eventPublished.code).to.be.equal(eventIn.code);
         });
 
