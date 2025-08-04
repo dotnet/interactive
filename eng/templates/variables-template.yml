@@ -12,7 +12,7 @@ variables:
   - name: DisableDockerDetector
     value: true
   - name: NodeJSVersion
-    value: '22.18.0'
+    value: '24.5.0
   - name: LocPRCreationEnabled
     value: ${{ eq(variables['Build.Reason'], 'Schedule') }}
   - name: Codeql.Enabled

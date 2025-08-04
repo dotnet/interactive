@@ -38,7 +38,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private lineReader: LineReader;
     private notifyOnExit: boolean = true;
     private readyPromise: Promise<KernelReady>;
-    private pingTimer: NodeJS.Timer | null = null;
+    private pingTimer: NodeJS.Timeout | null = null;
     private _receiverSubject: Subject<KernelCommandOrEventEnvelope>;
     private _sender: IKernelCommandAndEventSender;
     private _receiver: IKernelCommandAndEventReceiver;

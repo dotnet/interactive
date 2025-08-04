@@ -141,10 +141,10 @@ export function splitAndCleanLines(source: string | Array<string>): Array<string
 
 function ensureNoNewlineTerminators(line: string): string {
     if (line.endsWith('\n')) {
-        line = line.substr(0, line.length - 1);
+        line = line.substring(0, line.length - 1);
     }
     if (line.endsWith('\r')) {
-        line = line.substr(0, line.length - 1);
+        line = line.substring(0, line.length - 1);
     }
 
     return line;
@@ -152,7 +152,7 @@ function ensureNoNewlineTerminators(line: string): string {
 
 export function trimTrailingCarriageReturn(value: string): string {
     if (value.endsWith('\r')) {
-        return value.substr(0, value.length - 1);
+        return value.substring(0, value.length - 1);
     }
 
     return value;
