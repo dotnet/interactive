@@ -8,6 +8,9 @@ import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
 import * as polyglotNotebooksApi from "./api";
 
+// This is a workaround for rollup warnings. See their documentation for more details: https://rollupjs.org/troubleshooting/#avoiding-eval
+const eval2 = eval;
+
 export class JavascriptKernel extends Kernel {
     private suppressedLocals: Set<string>;
     private capture: ConsoleCapture;
@@ -55,7 +58,7 @@ export class JavascriptKernel extends Kernel {
         let result: any = undefined;
 
         try {
-            const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
+            const AsyncFunction = eval2(`Object.getPrototypeOf(async function(){}).constructor`);
             const evaluator = AsyncFunction("console", "polyglotNotebooks", code);
             result = await evaluator(this.capture, polyglotNotebooksApi);
             if (result !== undefined) {

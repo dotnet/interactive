@@ -6,6 +6,9 @@ import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 
+// This is a workaround for rollup warnings. See their documentation for more details: https://rollupjs.org/troubleshooting/#avoiding-eval
+const eval2 = eval;
+
 export class HtmlKernel extends Kernel {
     constructor(kernelName?: string, private readonly htmlFragmentInserter?: (htmlFragment: string) => Promise<string>, languageName?: string, languageVersion?: string) {
         super(kernelName ?? "html", languageName ?? "HTML", languageVersion ?? "5");
@@ -82,7 +85,7 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
     if (configuration?.jsEvaluator) {
         jsEvaluator = configuration.jsEvaluator;
     } else {
-        const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
+        const AsyncFunction = eval2(`Object.getPrototypeOf(async function(){}).constructor`);
         jsEvaluator = (code) => {
             const evaluator = AsyncFunction(code);
             return (evaluator as () => Promise<void>)();
