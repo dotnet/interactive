@@ -98,7 +98,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             const readySubscriber = this.subscribeToKernelEvents(eventEnvelope => {
                 if (eventEnvelope.eventType === KernelReadyType) {
                     readySubscriber.dispose();
-                    resolve(<KernelReady>(eventEnvelope.event));
+                    resolve(eventEnvelope.event as KernelReady);
                 }
             });
         });

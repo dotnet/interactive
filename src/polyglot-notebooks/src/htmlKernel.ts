@@ -18,7 +18,7 @@ export class HtmlKernel extends Kernel {
     }
 
     private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
-        const submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
+        const submitCode = invocation.commandEnvelope.command as commandsAndEvents.SubmitCode;
         const code = submitCode.code;
 
         const codeSubmissionReceivedEvent = new commandsAndEvents.KernelEventEnvelope(
@@ -85,7 +85,7 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
         const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
         jsEvaluator = (code) => {
             const evaluator = AsyncFunction(code);
-            return (<() => Promise<void>>evaluator)();
+            return (evaluator as () => Promise<void>)();
         };
     }
     let container = getOrCreateContainer();

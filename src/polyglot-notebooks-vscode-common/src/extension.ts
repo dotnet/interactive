@@ -167,7 +167,7 @@ export async function activate(context: vscode.ExtensionContext) {
         compositeKernel.registerCommandHandler({
             commandType: commandsAndEvents.RequestInputType,
             handle: async (commandInvocation) => {
-                const requestInput = <commandsAndEvents.RequestInput>commandInvocation.commandEnvelope.command;
+                const requestInput = commandInvocation.commandEnvelope.command as commandsAndEvents.RequestInput;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
 
@@ -210,7 +210,7 @@ export async function activate(context: vscode.ExtensionContext) {
         compositeKernel.registerCommandHandler({
             commandType: commandsAndEvents.SendEditableCodeType,
             handle: async commandInvocation => {
-                const sendEditableCode = <commandsAndEvents.SendEditableCode>commandInvocation.commandEnvelope.command;
+                const sendEditableCode = commandInvocation.commandEnvelope.command as commandsAndEvents.SendEditableCode;
                 const kernelName = sendEditableCode.kernelName;
                 const contents = sendEditableCode.code;
                 const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === notebookUri.toString());
@@ -282,7 +282,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ////////////////////////////////////////////////////////////////////////////////
     const launchOptions = await getInteractiveLaunchOptions();
-    const serializerCommand = <string[]>dotnetConfig.get('notebookParserArgs') || [];
+    const serializerCommand = dotnetConfig.get('notebookParserArgs') as string[] || [];
     const serializerCommandProcessStart = processArguments({ args: serializerCommand, workingDirectory: launchOptions!.workingDirectory }, '.', DotNetPathManager.getDotNetPath(), context.globalStorageUri.fsPath);
     const serializerLineAdapter = new ChildProcessLineAdapter(serializerCommandProcessStart.command, serializerCommandProcessStart.args, serializerCommandProcessStart.workingDirectory, true, diagnosticsChannel);
     const messageClient = new MessageClient(serializerLineAdapter);

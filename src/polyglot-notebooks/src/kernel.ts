@@ -64,7 +64,7 @@ export class Kernel {
     protected async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
         const eventEnvelope: commandsAndEvents.KernelEventEnvelope = new commandsAndEvents.KernelEventEnvelope(
             commandsAndEvents.KernelInfoProducedType,
-            <commandsAndEvents.KernelInfoProduced>{ kernelInfo: this._kernelInfo },
+            { kernelInfo: this._kernelInfo } as commandsAndEvents.KernelInfoProduced,
             invocation.commandEnvelope
         );//?
 
@@ -99,7 +99,7 @@ export class Kernel {
     // the callback set up by attachKernelToChannel, and the callback is expected to return void, so
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelopeOrModel: commandsAndEvents.KernelCommandEnvelope | commandsAndEvents.KernelCommandEnvelopeModel): Promise<void> {
-        let commandEnvelope = <commandsAndEvents.KernelCommandEnvelope>commandEnvelopeOrModel;
+        let commandEnvelope = commandEnvelopeOrModel as commandsAndEvents.KernelCommandEnvelope;
 
         if (commandsAndEvents.KernelCommandEnvelope.isKernelCommandEnvelopeModel(commandEnvelopeOrModel)) {
             Logger.default.warn(`Converting command envelope model to command envelope for backawards compatibility.`);
@@ -137,7 +137,7 @@ export class Kernel {
             await this.handleCommand(commandEnvelope);
         }
         catch (e) {
-            context.fail((<any>e)?.message || JSON.stringify(e));
+            context.fail((e as any)?.message || JSON.stringify(e));
         }
         finally {
             context.handlingKernel = previousHandlingKernel;
@@ -193,7 +193,7 @@ export class Kernel {
                     resolve();
                 }
                 catch (e) {
-                    context.fail((<any>e)?.message || JSON.stringify(e));
+                    context.fail((e as any)?.message || JSON.stringify(e));
                     context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
                         eventSubscription?.unsubscribe();
@@ -324,7 +324,7 @@ export async function submitCommandAndGetResult<TEvent extends commandsAndEvents
                 case commandsAndEvents.CommandFailedType:
                     if (!handled) {
                         handled = true;
-                        let err = <commandsAndEvents.CommandFailed>eventEnvelope.event;//?
+                        let err = eventEnvelope.event as commandsAndEvents.CommandFailed;
                         completionSource.reject(err);
                     }
                     break;
@@ -339,7 +339,7 @@ export async function submitCommandAndGetResult<TEvent extends commandsAndEvents
                 default:
                     if (eventEnvelope.eventType === expectedEventType) {
                         handled = true;
-                        let event = <TEvent>eventEnvelope.event;//? ($ ? eventEnvelope : {})
+                        let event = eventEnvelope.event as TEvent;//? ($ ? eventEnvelope : {})
                         completionSource.resolve(event);
                     }
                     break;

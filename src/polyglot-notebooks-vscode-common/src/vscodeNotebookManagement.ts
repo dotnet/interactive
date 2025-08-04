@@ -126,7 +126,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
 
                 if (isKernelEventEnvelope(envelope)) {
                     if (envelope.eventType === commandsAndEvents.KernelInfoProducedType) {
-                        const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
+                        const kernelInfoProduced = envelope.event as commandsAndEvents.KernelInfoProduced;
                         if (!connection.isKernelInfoForProxy(kernelInfoProduced.kernelInfo)) {
                             connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced.kernelInfo, client.kernel);
                         }

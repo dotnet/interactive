@@ -59,7 +59,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
     private _semanticTokensLegend: vscode.SemanticTokensLegend;
 
     constructor(packageJSON: any) {
-        const extensionData = vscode.extensions.all.map(extension => <VSCodeExtensionLike>extension);
+        const extensionData = vscode.extensions.all.map(extension => extension as VSCodeExtensionLike);
         this._dynamicTokenProvider = new DynamicGrammarSemanticTokenProvider(packageJSON, extensionData, path => fs.existsSync(path), path => fs.readFileSync(path, 'utf8'));
         const tokenTypes = [...defaultTokenTypes, ...this._dynamicTokenProvider.semanticTokenTypes];
         this._semanticTokensLegend = new vscode.SemanticTokensLegend(tokenTypes, defaultTokenModifiers);

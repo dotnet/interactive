@@ -34,7 +34,7 @@ export interface KernelCommandEnvelopeHandler {
 }
 
 function toBase64String(value: Uint8Array): string {
-    const wnd = <any>(globalThis.window);
+    const wnd = globalThis.window;
     if (wnd) {
         return wnd.btoa(String.fromCharCode(...value));
     } else {
@@ -62,7 +62,7 @@ export class KernelCommandEnvelope {
     }
 
     public static isKernelCommandEnvelopeModel(arg: KernelCommandEnvelope | KernelCommandEnvelopeModel): arg is KernelCommandEnvelopeModel {
-        return !(<any>arg).getOrCreateToken;
+        return !(arg as any).getOrCreateToken;
     }
 
     public setParent(parentCommand: KernelCommandEnvelope | undefined) {

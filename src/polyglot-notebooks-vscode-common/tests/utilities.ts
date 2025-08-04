@@ -63,7 +63,7 @@ export function createChannelConfig(channelCreator: (notebookUri: vscodeLike.Uri
         ...defaultClientMapperConfig,
         channelCreator: async (uri: vscodeLike.Uri) => {
             const channel = await channelCreator(uri);
-            return { channel, kernelReady: <commandsAndEvents.KernelReady>{} }
+            return { channel, kernelReady: {} as commandsAndEvents.KernelReady }
         },
     };
 }
@@ -81,10 +81,10 @@ export function decodeNotebookCellOutputs(outputs: vscodeLike.NotebookCellOutput
     return outputs.map(o => ({
         ...o, items: o.items.map(oi => {
             const decoded = decodeToString(oi.data);
-            let result = <any>{
+            let result = {
                 ...oi,
                 decodedData: jsonLikeMimeTypes.has(oi.mime) ? JSON.parse(decoded) : decoded,
-            };
+            } as any;
             delete result.data;
             return result;
         })

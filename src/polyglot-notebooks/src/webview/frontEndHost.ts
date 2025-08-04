@@ -28,7 +28,7 @@ export function createHost(
     kernelHost.defaultConnector.receiver.subscribe({
         next: (envelope) => {
             if (connection.isKernelEventEnvelope(envelope) && envelope.eventType === commandsAndEvents.KernelInfoProducedType) {
-                const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
+                const kernelInfoProduced = envelope.event as commandsAndEvents.KernelInfoProduced;
                 connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced.kernelInfo, compositeKernel);
             }
         }

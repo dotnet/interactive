@@ -13,19 +13,19 @@ export type KernelCommandOrEventEnvelope = commandsAndEvents.KernelCommandEnvelo
 export type KernelCommandOrEventEnvelopeModel = commandsAndEvents.KernelCommandEnvelopeModel | commandsAndEvents.KernelEventEnvelopeModel;
 
 export function isKernelCommandEnvelope(commandOrEvent: KernelCommandOrEventEnvelope): commandOrEvent is commandsAndEvents.KernelCommandEnvelope {
-    return (<any>commandOrEvent).commandType !== undefined;
+    return (commandOrEvent as any).commandType !== undefined;
 }
 
 export function isKernelCommandEnvelopeModel(commandOrEvent: KernelCommandOrEventEnvelopeModel): commandOrEvent is commandsAndEvents.KernelCommandEnvelopeModel {
-    return (<any>commandOrEvent).commandType !== undefined;
+    return (commandOrEvent as any).commandType !== undefined;
 }
 
 export function isKernelEventEnvelope(commandOrEvent: KernelCommandOrEventEnvelope): commandOrEvent is commandsAndEvents.KernelEventEnvelope {
-    return (<any>commandOrEvent).eventType !== undefined;
+    return (commandOrEvent as any).eventType !== undefined;
 }
 
 export function isKernelEventEnvelopeModel(commandOrEvent: KernelCommandOrEventEnvelopeModel): commandOrEvent is commandsAndEvents.KernelEventEnvelopeModel {
-    return (<any>commandOrEvent).eventType !== undefined;
+    return (commandOrEvent as any).eventType !== undefined;
 }
 
 export interface IKernelCommandAndEventReceiver extends rxjs.Subscribable<KernelCommandOrEventEnvelope> {
@@ -76,7 +76,7 @@ export class KernelCommandAndEventReceiver implements IKernelCommandAndEventRece
 }
 
 function isObservable(source: any): source is rxjs.Observer<KernelCommandOrEventEnvelope> {
-    return (<any>source).next !== undefined;
+    return (source as any).next !== undefined;
 }
 
 export class KernelCommandAndEventSender implements IKernelCommandAndEventSender {
@@ -242,7 +242,7 @@ export class Connector implements Disposable {
             next: (kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope) => {
                 if (isKernelEventEnvelope(kernelCommandOrEventEnvelope)) {
                     if (kernelCommandOrEventEnvelope.eventType === commandsAndEvents.KernelInfoProducedType) {
-                        const event = <commandsAndEvents.KernelInfoProduced>kernelCommandOrEventEnvelope.event;
+                        const event = kernelCommandOrEventEnvelope.event as commandsAndEvents.KernelInfoProduced;
                         if (!event.kernelInfo.remoteUri) {
                             const uri = extractHostAndNomalize(event.kernelInfo.uri!);
                             if (uri) {

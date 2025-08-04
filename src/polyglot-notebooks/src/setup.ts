@@ -53,7 +53,7 @@ export function setup(configuration?: SetupConfiguration) {
 
     if (global) {
         global.sendKernelCommand = (kernelCommandEnvelope: commandsAndEvents.KernelCommandEnvelope | commandsAndEvents.KernelCommandEnvelopeModel) => {
-            let commandEnvelope = <commandsAndEvents.KernelCommandEnvelope>kernelCommandEnvelope;
+            let commandEnvelope = kernelCommandEnvelope as commandsAndEvents.KernelCommandEnvelope;
 
             if (commandsAndEvents.KernelCommandEnvelope.isKernelCommandEnvelopeModel(kernelCommandEnvelope)) {
                 commandEnvelope = commandsAndEvents.KernelCommandEnvelope.fromJson(kernelCommandEnvelope);
@@ -85,13 +85,13 @@ export function setup(configuration?: SetupConfiguration) {
     );
 
     function configureRequire(interactive: any) {
-        if ((typeof (require) !== typeof (Function)) || (typeof ((<any>require).config) !== typeof (Function))) {
+        if ((typeof (require) !== typeof (Function)) || (typeof ((require as any).config) !== typeof (Function))) {
             let require_script = document.createElement('script');
             require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
             require_script.setAttribute('type', 'text/javascript');
             require_script.onload = function () {
                 interactive.configureRequire = (confing: any) => {
-                    return (<any>require).config(confing) || require;
+                    return (require as any).config(confing) || require;
                 };
 
             };
@@ -99,7 +99,7 @@ export function setup(configuration?: SetupConfiguration) {
 
         } else {
             interactive.configureRequire = (confing: any) => {
-                return (<any>require).config(confing) || require;
+                return (require as any).config(confing) || require;
             };
         }
     }

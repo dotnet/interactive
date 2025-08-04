@@ -315,12 +315,12 @@ export class DynamicGrammarSemanticTokenProvider {
             if (Array.isArray(extension.packageJSON?.contributes?.languages)) {
                 for (let languageIndex = 0; languageIndex < extension.packageJSON.contributes.languages.length; languageIndex++) {
                     const language = extension.packageJSON.contributes.languages[languageIndex];
-                    const languageId = normalizeLanguageName(<string>language.id);
+                    const languageId = normalizeLanguageName(language.id as string);
 
                     // set language configuration
                     let languageConfigurationObject: any | undefined = undefined;
                     if (typeof language.configuration === 'string') {
-                        const languageConfiguration = <string>language.configuration;
+                        const languageConfiguration = language.configuration as string;
                         const languageConfigurationPath = path.join(extension.extensionPath, languageConfiguration);
                         Logger.default.info(`Looking for language configuration file at ${languageConfigurationPath}`);
                         if (this.fileExists(languageConfigurationPath)) {
@@ -340,7 +340,7 @@ export class DynamicGrammarSemanticTokenProvider {
                     // set language info
                     const languageInfo = this._languageNameInfoMap.get(languageId);
                     if (languageInfo) {
-                        const aliases: string[] = (Array.isArray(language.aliases) ? <any[]>language.aliases : []).filter(a => typeof a === 'string');
+                        const aliases: string[] = (Array.isArray(language.aliases) ? language.aliases as any[] : []).filter(a => typeof a === 'string');
                         for (const alias of aliases.map(normalizeLanguageName)) {
                             this._languageNameInfoMap.set(alias, languageInfo);
                             if (languageConfigurationObject) {

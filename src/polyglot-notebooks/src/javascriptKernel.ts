@@ -26,14 +26,14 @@ export class JavascriptKernel extends Kernel {
     }
 
     private handleSendValue(invocation: IKernelCommandInvocation): Promise<void> {
-        const sendValue = <commandsAndEvents.SendValue>invocation.commandEnvelope.command;
+        const sendValue = invocation.commandEnvelope.command as commandsAndEvents.SendValue;
         if (sendValue.formattedValue) {
             switch (sendValue.formattedValue.mimeType) {
                 case 'application/json':
-                    (<any>globalThis)[sendValue.name] = connection.Deserialize(sendValue.formattedValue.value);
+                    (globalThis as any)[sendValue.name] = connection.Deserialize(sendValue.formattedValue.value);
                     break;
                 default:
-                    (<any>globalThis)[sendValue.name] = sendValue.formattedValue.value;
+                    (globalThis as any)[sendValue.name] = sendValue.formattedValue.value;
                     break;
             }
             return Promise.resolve();
@@ -42,7 +42,7 @@ export class JavascriptKernel extends Kernel {
     }
 
     private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
-        const submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
+        const submitCode = invocation.commandEnvelope.command as commandsAndEvents.SubmitCode;
         const code = submitCode.code;
 
         super.kernelInfo.localName;
@@ -111,7 +111,7 @@ export class JavascriptKernel extends Kernel {
     }
 
     private handleRequestValue(invocation: IKernelCommandInvocation): Promise<void> {
-        const requestValue = <commandsAndEvents.RequestValue>invocation.commandEnvelope.command;
+        const requestValue = invocation.commandEnvelope.command as commandsAndEvents.RequestValue;
         const rawValue = this.getLocalVariable(requestValue.name);
         const formattedValue = formatValue(rawValue, requestValue.mimeType || 'application/json');
         Logger.default.info(`returning ${JSON.stringify(formattedValue)} for ${requestValue.name}`);
@@ -130,7 +130,7 @@ export class JavascriptKernel extends Kernel {
         try {
             for (const key in globalThis) {
                 try {
-                    if (typeof (<any>globalThis)[key] !== 'function') {
+                    if (typeof (globalThis as any)[key] !== 'function') {
                         result.push(key);
                     }
                 } catch (e) {
@@ -145,7 +145,7 @@ export class JavascriptKernel extends Kernel {
     }
 
     public getLocalVariable(name: string): any {
-        return (<any>globalThis)[name];
+        return (globalThis as any)[name];
     }
 }
 

@@ -65,7 +65,7 @@ export class ProxyKernel extends Kernel {
                     if (envelope.eventType === commandsAndEvents.KernelInfoProducedType &&
                         (envelope.command === null || envelope.command === undefined)) {
 
-                        const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
+                        const kernelInfoProduced = envelope.event as commandsAndEvents.KernelInfoProduced;
                         kernelInfoProduced.kernelInfo;//?
                         this.kernelInfo;//?
                         if (kernelInfoProduced.kernelInfo.uri === this.kernelInfo.remoteUri) {
@@ -92,7 +92,7 @@ export class ProxyKernel extends Kernel {
                         switch (envelope.eventType) {
                             case commandsAndEvents.KernelInfoProducedType:
                                 {
-                                    const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
+                                    const kernelInfoProduced = envelope.event as commandsAndEvents.KernelInfoProduced;
                                     if (kernelInfoProduced.kernelInfo.uri === this.kernelInfo.remoteUri) {
                                         this.updateKernelInfoFromEvent(kernelInfoProduced);
                                         const event = new commandsAndEvents.KernelEventEnvelope(
@@ -149,12 +149,12 @@ export class ProxyKernel extends Kernel {
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken}`);
             const enventEnvelope = await completionSource.promise;
             if (enventEnvelope.eventType === commandsAndEvents.CommandFailedType) {
-                commandInvocation.context.fail((<commandsAndEvents.CommandFailed>enventEnvelope.event).message);
+                commandInvocation.context.fail((enventEnvelope.event as commandsAndEvents.CommandFailed).message);
             }
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}}`);
         }
         catch (e) {
-            commandInvocation.context.fail((<any>e).message);
+            commandInvocation.context.fail((e as any).message);
         }
         finally {
             eventSubscription.unsubscribe();
