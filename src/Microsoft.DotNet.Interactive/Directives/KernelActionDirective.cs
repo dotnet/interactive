@@ -19,8 +19,9 @@ public partial class KernelActionDirective : KernelDirective
     private readonly NamedSymbolCollection<KernelActionDirective> _subcommands;
     private KernelActionDirective? _parent;
 
-    public KernelActionDirective(string name) : base(name)
+    public KernelActionDirective(string name, string? description = null) : base(name)
     {
+        Description = description;
         _subcommands = new NamedSymbolCollection<KernelActionDirective>(
             directive => directive.Name,
             (adding, existing) =>
