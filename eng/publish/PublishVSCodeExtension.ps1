@@ -21,6 +21,8 @@ try {
 
         # find extension vsix
         $extension = Get-ChildItem "$artifactsPath\vscode\$vscodeTarget\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
+        $manifest = Get-ChildItem "$artifactsPath\vscode\$vscodeTarget\dotnet-interactive-vscode-*.manifest" | Select-Object -First 1
+        $signature = Get-ChildItem "$artifactsPath\vscode\$vscodeTarget\dotnet-interactive-vscode-*.signature.p7s" | Select-Object -First 1
 
         # verify
         if (-Not $simulate) {
@@ -35,7 +37,7 @@ try {
             $packagestoPublish = @(
                 "Microsoft.dotnet-interactive",
                 "Microsoft.DotNet.Interactive",
-                "Microsoft.DotNet.Interactive.AspNetCore",                
+                "Microsoft.DotNet.Interactive.AspNetCore",
                 "Microsoft.DotNet.Interactive.Browser",
                 "Microsoft.DotNet.Interactive.CSharp",
                 "Microsoft.DotNet.Interactive.Documents",
@@ -80,12 +82,12 @@ try {
         Write-Host "Publishing $extension"
         if (-Not $simulate) {
             if ($vscodeTarget -eq "insiders") {
-                vsce publish --pre-release --packagePath $extension --pat $vscodeToken --noVerify
+                vsce publish --pre-release --packagePath $extension --manifestPath $manifest --signaturePath $signature --pat $vscodeToken --noVerify
             }
             else{
-                vsce publish --packagePath $extension --pat $vscodeToken --noVerify
+                vsce publish --packagePath $extension --manifestPath $manifest --signaturePath $signature --pat $vscodeToken --noVerify
             }
-           
+
         }
     }
 }

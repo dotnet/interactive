@@ -10,6 +10,14 @@ function PublishInsidersExtension {
     $extension = Get-ChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
     Write-Host "Found extension: $extension"
 
+    Write-Host "Find extension manifest..."
+    $manifest = Get-ChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.manifest" | Select-Object -First 1
+    Write-Host "Found extension: $manifest"
+
+    Write-Host "Find extension signature..."
+    $signature = Get-ChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.signature.p7s" | Select-Object -First 1
+    Write-Host "Found extension: $signature"
+
     Write-Host "Verify the extension..."
     if ($simulate) {
         Write-Host "Simulated command: . '$PSScriptRoot\VerifyVSCodeExtension.ps1' -extensionPath $extension"
@@ -22,9 +30,9 @@ function PublishInsidersExtension {
 
     Write-Host "Publishing extension $extension to VS Code Marketplace using Managed Identity..."
     if ($simulate) {
-        Write-Host "Simulated command: vsce publish --pre-release --packagePath $extension --noVerify --azure-credential"
+        Write-Host "Simulated command: vsce publish --pre-release --packagePath $extension --manifestPath $manifest --signaturePath $signature --noVerify --azure-credential"
     } else {
-        vsce publish --pre-release --packagePath $extension --noVerify --azure-credential
+        vsce publish --pre-release --packagePath $extension --manifestPath $manifest --signaturePath $signature --noVerify --azure-credential
     }
 }
 
@@ -40,6 +48,14 @@ function PublishStableExtensionAndNuGetPackages {
     Write-Host "Find extension vsix..."
     $extension = Get-ChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
     Write-Host "Found extension: $extension"
+
+    Write-Host "Find extension manifest..."
+    $manifest = Get-ChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.manifest" | Select-Object -First 1
+    Write-Host "Found extension: $manifest"
+
+    Write-Host "Find extension signature..."
+    $signature = Get-ChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.signature.p7s" | Select-Object -First 1
+    Write-Host "Found extension: $signature"
 
     Write-Host "Verify the extension..."
     if ($simulate) {
@@ -102,8 +118,8 @@ function PublishStableExtensionAndNuGetPackages {
 
     Write-Host "Publishing extension $extension to VS Code Marketplace using Managed Identity..."
     if ($simulate) {
-        Write-Host "Simulated command: vsce publish --packagePath $extension --noVerify --azure-credential"
+        Write-Host "Simulated command: vsce publish --packagePath $extension --manifestPath $manifest --signaturePath $signature --noVerify --azure-credential"
     } else {
-        vsce publish --packagePath $extension --noVerify --azure-credential
+        vsce publish --packagePath $extension --manifestPath $manifest --signaturePath $signature --noVerify --azure-credential
     }
 }

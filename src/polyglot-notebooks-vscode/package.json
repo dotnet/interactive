@@ -790,7 +790,8 @@
     "copy-preloads": "npx copyfiles --error --verbose --up 3 ../polyglot-notebooks/dist/activation.js ./resources",
     "compile-variable-grid": "cd ../polyglot-notebooks-ui-components && npm run buildDev",
     "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../polyglot-notebooks-ui-components/dist/*.* ./resources",
-    "vscode:prepublish": "npm run compile && dotnet build ../../eng/msbuild/signJs --property jsOutputPath=..\\..\\..\\src\\polyglot-notebooks-vscode\\out -bl -v:normal",
+    "vscode:prepublish": "npm run package",
+    "package": "npm run compile && dotnet build ../../eng/msbuild/signJs --property jsOutputPath=..\\..\\..\\src\\polyglot-notebooks-vscode-insiders\\out -bl -v:normal",
     "compile": "npm run lint && tsc -p ./ && npm run compile-preloads && npm run compile-variable-grid && npm run copy-preloads && npm run copy-variable-grid",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
@@ -799,7 +800,6 @@
     "ciTest": "node ../ensure-testresults-directory.js && npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "testDebug": "mocha out/tests/**/*.test.js",
     "tdd": "npm test -- --watch",
-    "package": "npx @vscode/vsce package",
     "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
   },
   "mocha": {},
