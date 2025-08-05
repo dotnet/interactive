@@ -118,7 +118,7 @@ public sealed class CompositeKernel :
         }
     }
 
-    private void AddDirective(KernelSpecifierDirective directive)
+    private void AddDirective(KernelDirective directive)
     {
         if (KernelInfo.SupportedDirectives.Any(d => d.Name == directive.Name))
         {

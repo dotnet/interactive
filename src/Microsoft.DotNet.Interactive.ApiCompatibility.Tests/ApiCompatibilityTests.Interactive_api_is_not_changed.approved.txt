@@ -521,7 +521,7 @@ Microsoft.DotNet.Interactive.Connection
     public System.Void Dispose()
 Microsoft.DotNet.Interactive.Directives
   public class KernelActionDirective : KernelDirective
-    .ctor(System.String name)
+    .ctor(System.String name, System.String description = null)
     public System.Type KernelCommandType { get; set;}
     public KernelActionDirective Parent { get;}
     public System.Collections.Generic.ICollection<KernelActionDirective> Subcommands { get; set;}
