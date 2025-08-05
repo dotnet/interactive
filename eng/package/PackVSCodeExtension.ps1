@@ -30,8 +30,7 @@ function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDi
 
     # pack
     Write-Host "Packing extension"
-    # Pass --allow-package-all-secrets & --allow-package-env-file because the @secretlint package used by vsce is attempting to read a directory as a file and this skip scanning.
-    npx @vscode/vsce package -o "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix" --allow-package-all-secrets --allow-package-env-file
+    npx @vscode/vsce package -o "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
 
     Write-Host "Generating extension manifest"
     npx @vscode/vsce generate-manifest -i "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix" -o "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.manifest"
