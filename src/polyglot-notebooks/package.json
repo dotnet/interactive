@@ -58,7 +58,7 @@
     "parse5": "^5.1.1",
     "rollup": "2.74.1",
     "rollup-plugin-typescript2": "0.31.2",
-    "tmp": "0.2.1",
+    "tmp": "0.2.4",
     "ts-mocha": "10.0.0",
     "ts-node": "10.8.0",
     "typescript": "5.8.3"
