@@ -8,6 +8,9 @@ import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
 import * as polyglotNotebooksApi from "./api";
 
+// This is a workaround for rollup warnings. See their documentation for more details: https://rollupjs.org/troubleshooting/#avoiding-eval
+const eval2 = eval;
+
 export class JavascriptKernel extends Kernel {
     private suppressedLocals: Set<string>;
     private capture: ConsoleCapture;
@@ -26,14 +29,14 @@ export class JavascriptKernel extends Kernel {
     }
 
     private handleSendValue(invocation: IKernelCommandInvocation): Promise<void> {
-        const sendValue = <commandsAndEvents.SendValue>invocation.commandEnvelope.command;
+        const sendValue = invocation.commandEnvelope.command as commandsAndEvents.SendValue;
         if (sendValue.formattedValue) {
             switch (sendValue.formattedValue.mimeType) {
                 case 'application/json':
-                    (<any>globalThis)[sendValue.name] = connection.Deserialize(sendValue.formattedValue.value);
+                    (globalThis as any)[sendValue.name] = connection.Deserialize(sendValue.formattedValue.value);
                     break;
                 default:
-                    (<any>globalThis)[sendValue.name] = sendValue.formattedValue.value;
+                    (globalThis as any)[sendValue.name] = sendValue.formattedValue.value;
                     break;
             }
             return Promise.resolve();
@@ -42,7 +45,7 @@ export class JavascriptKernel extends Kernel {
     }
 
     private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
-        const submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
+        const submitCode = invocation.commandEnvelope.command as commandsAndEvents.SubmitCode;
         const code = submitCode.code;
 
         super.kernelInfo.localName;
@@ -55,7 +58,7 @@ export class JavascriptKernel extends Kernel {
         let result: any = undefined;
 
         try {
-            const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
+            const AsyncFunction = eval2(`Object.getPrototypeOf(async function(){}).constructor`);
             const evaluator = AsyncFunction("console", "polyglotNotebooks", code);
             result = await evaluator(this.capture, polyglotNotebooksApi);
             if (result !== undefined) {
@@ -111,7 +114,7 @@ export class JavascriptKernel extends Kernel {
     }
 
     private handleRequestValue(invocation: IKernelCommandInvocation): Promise<void> {
-        const requestValue = <commandsAndEvents.RequestValue>invocation.commandEnvelope.command;
+        const requestValue = invocation.commandEnvelope.command as commandsAndEvents.RequestValue;
         const rawValue = this.getLocalVariable(requestValue.name);
         const formattedValue = formatValue(rawValue, requestValue.mimeType || 'application/json');
         Logger.default.info(`returning ${JSON.stringify(formattedValue)} for ${requestValue.name}`);
@@ -130,7 +133,7 @@ export class JavascriptKernel extends Kernel {
         try {
             for (const key in globalThis) {
                 try {
-                    if (typeof (<any>globalThis)[key] !== 'function') {
+                    if (typeof (globalThis as any)[key] !== 'function') {
                         result.push(key);
                     }
                 } catch (e) {
@@ -145,7 +148,7 @@ export class JavascriptKernel extends Kernel {
     }
 
     public getLocalVariable(name: string): any {
-        return (<any>globalThis)[name];
+        return (globalThis as any)[name];
     }
 }
 

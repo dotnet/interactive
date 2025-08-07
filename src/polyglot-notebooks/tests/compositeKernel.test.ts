@@ -50,8 +50,8 @@ describe("compositeKernel", () => {
             events.push(e);
         });
 
-        const command1 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "pytonCode", targetKernelName: python.name });
-        const command2 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "goCode", targetKernelName: go.name });
+        const command1 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, { code: "pytonCode", targetKernelName: python.name } as commandsAndEvent.SubmitCode);
+        const command2 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, { code: "goCode", targetKernelName: go.name } as commandsAndEvent.SubmitCode);
 
         await compositeKernel.send(command1);
         await compositeKernel.send(command2);
@@ -78,7 +78,7 @@ describe("compositeKernel", () => {
             events.push(e);
         });
 
-        const command = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "pytonCode", targetKernelName: compositeKernel.name });
+        const command = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, { code: "pytonCode", targetKernelName: compositeKernel.name } as commandsAndEvent.SubmitCode);
         await compositeKernel.send(command);
 
         expect(events.find(e => e.command!.command.targetKernelName === compositeKernel.name)).not.to.be.undefined;
@@ -134,8 +134,8 @@ describe("compositeKernel", () => {
             events.push(e);
         });
 
-        const command1 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "pytonCode", targetKernelName: "python" });
-        const command2 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "goCode", targetKernelName: "go" });
+        const command1 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, { code: "pytonCode", targetKernelName: "python" } as commandsAndEvent.SubmitCode);
+        const command2 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, { code: "goCode", targetKernelName: "go" } as commandsAndEvent.SubmitCode);
 
         await compositeKernel.send(command1);
         await compositeKernel.send(command2);
@@ -204,9 +204,9 @@ describe("compositeKernel", () => {
             events.push(e);
         });
 
-        compositeKernel.setDefaultTargetKernelNameForCommand(<commandsAndEvent.KernelCommandType>CustomCommandType, compositeKernel.name);
+        compositeKernel.setDefaultTargetKernelNameForCommand(CustomCommandType as commandsAndEvent.KernelCommandType, compositeKernel.name);
 
-        const command = new commandsAndEvent.KernelCommandEnvelope(<commandsAndEvent.KernelCommandType>CustomCommandType, {});
+        const command = new commandsAndEvent.KernelCommandEnvelope(CustomCommandType as commandsAndEvent.KernelCommandType, {});
         await compositeKernel.send(command);
 
         expect(handlingKernel).to.be.eq(compositeKernel.name);

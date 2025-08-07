@@ -9,7 +9,7 @@ import * as commandsAndEvents from "../src/polyglot-notebooks/commandsAndEvents"
 
 
 export function asKernelClientContainer(client: DotnetInteractiveClient): KernelClientContainer {
-    return <KernelClientContainer><any>client;
+    return client as any as KernelClientContainer;
 }
 
 export function configureFetchForKernelDiscovery(rootUrl: string) {

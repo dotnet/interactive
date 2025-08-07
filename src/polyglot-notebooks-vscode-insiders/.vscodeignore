@@ -1,7 +1,8 @@
 .vscode/**
 .vscode-test/**
-out/src/common/tests/**
+out/tests/vscode-common-tests/**
 src/**
+tests/**
 tools/**
 .gitignore
 mocha.opts

@@ -22,7 +22,7 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "1+1" });
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "1+1" } as commandsAndEvents.SubmitCode);
         await kernel.send(command);
 
         expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
@@ -35,11 +35,11 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, {
             code: `
 let command = new polyglotNotebooks.KernelCommandEnvelope(polyglotNotebooks.SubmitCodeType, { code: "return 1+2;"});
 return command.toJson();`
-        });
+        } as commandsAndEvents.SubmitCode);
         await kernel.send(command);
 
         expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
@@ -65,13 +65,13 @@ return command.toJson();`
 
         const command = new commandsAndEvents.KernelCommandEnvelope(
             commandsAndEvents.SendValueType,
-            <commandsAndEvents.SendValue>{
+            {
                 formattedValue: {
                     value: JSON.stringify({ a: 1 }),
                     mimeType: "application/json",
                 },
                 name: "x0"
-            });
+            } as commandsAndEvents.SendValue);
 
         await kernel.send(command);
 
@@ -85,10 +85,10 @@ return command.toJson();`
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
 
-        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, <commandsAndEvents.RequestValueInfos>{});
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, {} as commandsAndEvents.RequestValueInfos);
         await kernel.send(command);
 
-        expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos).to.be.empty;
+        expect((events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event as commandsAndEvents.ValueInfosProduced).valueInfos).to.be.empty;
     });
 
     it("reports values defined in SubmitCode", async () => {
@@ -97,13 +97,13 @@ return command.toJson();`
         kernel.subscribeToKernelEvents((e) => events.push(e));
         const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `${valueName} = 42;` });
-        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, <commandsAndEvents.RequestValueInfos>{});
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: `${valueName} = 42;` } as commandsAndEvents.SubmitCode);
+        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, {} as commandsAndEvents.RequestValueInfos);
 
         await kernel.send(submitCode);
         await kernel.send(requestValueInfos);
 
-        expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
+        expect((events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event as commandsAndEvents.ValueInfosProduced).valueInfos)
             .to.deep.equal(
                 [{
                     formattedValue: {
@@ -123,13 +123,13 @@ return command.toJson();`
         kernel.subscribeToKernelEvents((e) => events.push(e));
         const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `${valueName} = [42,43];` });
-        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, <commandsAndEvents.RequestValueInfos>{});
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: `${valueName} = [42,43];` } as commandsAndEvents.SubmitCode);
+        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, {} as commandsAndEvents.RequestValueInfos);
 
         await kernel.send(submitCode);
         await kernel.send(requestValueInfos);
 
-        expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
+        expect((events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event as commandsAndEvents.ValueInfosProduced).valueInfos)
             .to.deep.equal(
                 [{
                     formattedValue: {
@@ -149,13 +149,13 @@ return command.toJson();`
         kernel.subscribeToKernelEvents((e) => events.push(e));
         const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `${valueName}1 = NaN; ${valueName}2 = Infinity; ${valueName}3 = -Infinity;` });
-        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, <commandsAndEvents.RequestValueInfos>{});
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: `${valueName}1 = NaN; ${valueName}2 = Infinity; ${valueName}3 = -Infinity;` } as commandsAndEvents.SubmitCode);
+        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, {} as commandsAndEvents.RequestValueInfos);
 
         await kernel.send(submitCode);
         await kernel.send(requestValueInfos);
 
-        expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
+        expect((events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event as commandsAndEvents.ValueInfosProduced).valueInfos)
             .to.deep.equal(
                 [{
                     formattedValue: {
@@ -196,13 +196,13 @@ return command.toJson();`
         kernel.subscribeToKernelEvents((e) => events.push(e));
         const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `${valueName} = 42;` });
-        const requestValue = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueType, <commandsAndEvents.RequestValue>{ name: `${valueName}` });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: `${valueName} = 42;` } as commandsAndEvents.SubmitCode);
+        const requestValue = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueType, { name: `${valueName}` } as commandsAndEvents.RequestValue);
 
         await kernel.send(submitCode);
         await kernel.send(requestValue);
 
-        expect((<commandsAndEvents.ValueProduced>events.find(e => e.eventType === commandsAndEvents.ValueProducedType)!.event).formattedValue)
+        expect((events.find(e => e.eventType === commandsAndEvents.ValueProducedType)!.event as commandsAndEvents.ValueProduced).formattedValue)
             .to.deep.equal({
                 mimeType: 'application/json',
                 suppressDisplay: false,
@@ -217,7 +217,7 @@ return command.toJson();`
             events.push(e);
         });
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "1+1" });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "1+1" } as commandsAndEvents.SubmitCode);
 
         await kernel.send(submitCode);
 
@@ -231,7 +231,7 @@ return command.toJson();`
             events.push(e);
         });
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "return 1+1;" });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "return 1+1;" } as commandsAndEvents.SubmitCode);
 
         await kernel.send(submitCode);
 
@@ -245,7 +245,7 @@ return command.toJson();`
             events.push(e);
         });
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, {
             code: `
                 f = function DoSomethingThatCausesAnError() {
                     const n = 1;
@@ -253,7 +253,7 @@ return command.toJson();`
                 };
 
                 f();
-            ` });
+            ` } as commandsAndEvents.SubmitCode);
 
         await kernel.send(submitCode);
 
@@ -271,7 +271,7 @@ return command.toJson();`
             events.push(e);
         });
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `await Promise.resolve(20);` });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: `await Promise.resolve(20);` } as commandsAndEvents.SubmitCode);
 
         await kernel.send(submitCode);
 
@@ -287,9 +287,11 @@ return command.toJson();`
 
         const submitCode = new commandsAndEvents.KernelCommandEnvelope(
             commandsAndEvents.SubmitCodeType,
-            <commandsAndEvents.SubmitCode>{
+            {
                 code: `await Promise.resolve(20);
-            return 1+1;` });
+            return 1+1;`
+            } as commandsAndEvents.SubmitCode
+        );
 
         await kernel.send(submitCode);
 
@@ -304,9 +306,9 @@ return command.toJson();`
             events.push(e);
         });
 
-        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "console.log(12);" });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "console.log(12);" } as commandsAndEvents.SubmitCode);
         await kernel.send(submitCode);
-        let event = <commandsAndEvents.DisplayedValueProduced><any>(events.find(e => e.eventType === commandsAndEvents.DisplayedValueProducedType))?.event;
+        let event = events.find(e => e.eventType === commandsAndEvents.DisplayedValueProducedType)?.event as commandsAndEvents.DisplayedValueProduced;
         expect(event).to.not.be.undefined;
 
         expect(event.formattedValues[0].value).to.equal("12");
@@ -320,15 +322,15 @@ return command.toJson();`
             events.push(e);
         });
 
-        const submitCodeToDeclareFunction = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "hello = function () { console.log('hello'); };" });
-        const submitCodeInvocation1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "hello();" });
-        const submitCodeInvocation2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "hello();" });
+        const submitCodeToDeclareFunction = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "hello = function () { console.log('hello'); };" } as commandsAndEvents.SubmitCode);
+        const submitCodeInvocation1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "hello();" } as commandsAndEvents.SubmitCode);
+        const submitCodeInvocation2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, { code: "hello();" } as commandsAndEvents.SubmitCode);
 
         await kernel.send(submitCodeToDeclareFunction);
         await kernel.send(submitCodeInvocation1);
         await kernel.send(submitCodeInvocation2);
 
-        const writtenLines = events.filter(e => e.eventType === commandsAndEvents.DisplayedValueProducedType).map(e => <commandsAndEvents.DisplayedValueProduced>e.event).map(e => e.formattedValues[0].value);
+        const writtenLines = events.filter(e => e.eventType === commandsAndEvents.DisplayedValueProducedType).map(e => e.event as commandsAndEvents.DisplayedValueProduced).map(e => e.formattedValues[0].value);
         expect(writtenLines).to.deep.equal([
             "hello",
             "hello",

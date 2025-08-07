@@ -145,7 +145,7 @@ export class DotNetNotebookKernel {
                 case '#!connect':
                     this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
                         const hostUri = e.message.hostUri;
-                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, <commandsAndEvents.KernelInfo[]>(e.message.kernelInfos), this.uriMessageHandlerMap,
+                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, e.message.kernelInfos as commandsAndEvents.KernelInfo[], this.uriMessageHandlerMap,
                             (arg) => {
                                 controller.postMessage({ ...arg, webViewId: e.message.webViewId });
                             },
@@ -159,7 +159,7 @@ export class DotNetNotebookKernel {
             }
 
             if (e.message.logEntry) {
-                Logger.default.write(<LogEntry>e.message.logEntry);
+                Logger.default.write(e.message.logEntry as LogEntry);
             }
         }));
         this.disposables.push(controller);
@@ -194,7 +194,7 @@ export class DotNetNotebookKernel {
                 executionTask.token.onCancellationRequested(() => {
                     client.cancel().catch(async err => {
                         // command failed to cancel
-                        const cancelFailureMessage = typeof err?.message === 'string' ? <string>err.message : '' + err;
+                        const cancelFailureMessage = typeof err?.message === 'string' ? err.message as string : '' + err;
                         const errorOutput = new vscode.NotebookCellOutput(this.config.createErrorOutput(cancelFailureMessage).items.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime, oi.stream)));
                         await executionTask.appendOutput(errorOutput);
                     });
@@ -379,7 +379,7 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
             if (isKernelEventEnvelope(commandOrEventEnvelope) && commandOrEventEnvelope.eventType === commandsAndEvents.KernelInfoProducedType) {
                 // got info about a kernel; either update an existing entry, or add a new one
                 let metadataChanged = false;
-                const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>commandOrEventEnvelope.event;
+                const kernelInfoProduced = commandOrEventEnvelope.event as commandsAndEvents.KernelInfoProduced;
                 const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
                 for (const item of notebookMetadata.kernelInfo.items) {
                     if (item.name === kernelInfoProduced.kernelInfo.localName) {

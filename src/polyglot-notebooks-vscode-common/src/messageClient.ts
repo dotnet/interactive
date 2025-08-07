@@ -13,7 +13,7 @@ export class MessageClient {
             try {
                 const message = commonUtilities.parse(line);
                 if (typeof message.id === 'string') {
-                    const responseId = <string>message.id;
+                    const responseId = message.id as string;
                     const responseCallback = this.requestListeners.get(responseId);
                     if (responseCallback) {
                         responseCallback(message);

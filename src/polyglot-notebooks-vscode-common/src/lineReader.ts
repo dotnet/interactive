@@ -15,12 +15,12 @@ export class LineReader {
 
         let i = this.current.indexOf('\n');
         while (i >= 0) {
-            let line = this.current.substr(0, i);
+            let line = this.current.substring(0, i);
             if (line.endsWith('\r')) {
-                line = line.substr(0, line.length - 1);
+                line = line.substring(0, line.length - 1);
             }
 
-            this.current = this.current.substr(i + 1);
+            this.current = this.current.substring(i + 1);
             for (let listener of this.subscribers) {
                 try {
                     listener(line);

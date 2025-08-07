@@ -22,8 +22,8 @@ describe("dotnet-interactive", () => {
         Logger.configure("test", () => { });
     });
 
-    let commandType1: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand1";
-    let commandType2: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand2";
+    let commandType1: commandsAndEvents.KernelCommandType = "CustomCommand1" as commandsAndEvents.KernelCommandType;
+    let commandType2: commandsAndEvents.KernelCommandType = "CustomCommand2" as commandsAndEvents.KernelCommandType;
 
     let makeKernel = async () => {
         let kernel = new Kernel("client-side-kernel");
@@ -54,13 +54,13 @@ describe("dotnet-interactive", () => {
 
             expect(handler1Invocations.length).to.be.equal(1);
             let handler1Invocation = handler1Invocations[0];
-            let commandSentToHandler1 = <CustomCommand1>handler1Invocation.commandEnvelope.command;
+            let commandSentToHandler1 = handler1Invocation.commandEnvelope.command as CustomCommand1;
             expect(commandSentToHandler1).to.equal(command1In);
             expect(handler1Invocation.context).is.not.null;
 
             expect(handler2Invocations.length).to.be.equal(1);
             let handler2Invocation = handler2Invocations[0];
-            let commandSentToHandler2 = <CustomCommand2>handler2Invocation.commandEnvelope.command;
+            let commandSentToHandler2 = handler2Invocation.commandEnvelope.command as CustomCommand2;
             expect(commandSentToHandler2).to.equal(command2In);
             expect(handler2Invocation.context).is.not.null;
         });
@@ -87,7 +87,7 @@ describe("dotnet-interactive", () => {
 
             expect(handler2Invocations.length).to.be.equal(1);
             let handler2Invocation = handler2Invocations[0];
-            let commandSentToHandler2 = <CustomCommand1>handler2Invocation.commandEnvelope.command;
+            let commandSentToHandler2 = handler2Invocation.commandEnvelope.command as CustomCommand1;
             expect(commandSentToHandler2).to.equal(command1In);
             expect(handler2Invocation.context).is.not.null;
         });
@@ -96,8 +96,8 @@ describe("dotnet-interactive", () => {
         it("does not invoke command handler when type does not match", async () => {
             var kernel = await makeKernel();
 
-            let commandType1: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand1";
-            let commandType2: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand2";
+            let commandType1: commandsAndEvents.KernelCommandType = "CustomCommand1" as commandsAndEvents.KernelCommandType;
+            let commandType2: commandsAndEvents.KernelCommandType = "CustomCommand2" as commandsAndEvents.KernelCommandType;
             let command2In: CustomCommand2 = {
                 moreData: "Test 2"
             };

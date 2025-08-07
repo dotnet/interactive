@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.Build.NoTargets">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateAssemblyVersionInfo>false</GenerateAssemblyVersionInfo>
+    <EnableDefaultSignFiles>false</EnableDefaultSignFiles>
+    <MicroBuild_DoNotStrongNameSign>true</MicroBuild_DoNotStrongNameSign>
+    <IsPackable>false</IsPackable>
+    <OutDir>$(MSBuildProjectDirectory)\$(JSOutputPath)\</OutDir>
+    <MicroBuild_SigningEnabled>true</MicroBuild_SigningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FilesToSign Include="$(OutDir)*.js">
+      <Authenticode>MicrosoftSHA2</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+</Project>

@@ -97,10 +97,10 @@ describe("frontEndHost", () => {
         const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
         const testGlobal: any = {};
         frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
-        const compositeKernel = <CompositeKernel>testGlobal['testKernel'].compositeKernel;
+        const compositeKernel = testGlobal['testKernel'].compositeKernel as CompositeKernel;
         remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(
             commandsAndEvents.KernelInfoProducedType,
-            <commandsAndEvents.KernelInfoProduced>{
+            {
                 kernelInfo: {
                     isComposite: false,
                     isProxy: false,
@@ -126,7 +126,7 @@ describe("frontEndHost", () => {
                         }
                     ]
                 }
-            }
+            } as commandsAndEvents.KernelInfoProduced
         ));
         const kernel = compositeKernel.findKernelByName('sql');
         expect(kernel).to.not.be.undefined;
@@ -154,10 +154,10 @@ describe("frontEndHost", () => {
         const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
         const testGlobal: any = {};
         frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
-        const compositeKernel = <CompositeKernel>testGlobal['testKernel'].compositeKernel;
+        const compositeKernel = testGlobal['testKernel'].compositeKernel as CompositeKernel;
         remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(
             commandsAndEvents.KernelInfoProducedType,
-            <commandsAndEvents.KernelInfoProduced>{
+            {
                 kernelInfo: {
                     isComposite: false,
                     isProxy: false,
@@ -172,11 +172,11 @@ describe("frontEndHost", () => {
                         }
                     ]
                 }
-            }
+            } as commandsAndEvents.KernelInfoProduced
         ));
         remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(
             commandsAndEvents.KernelInfoProducedType,
-            <commandsAndEvents.KernelInfoProduced>{
+            {
                 kernelInfo: {
                     isComposite: false,
                     isProxy: false,
@@ -202,7 +202,7 @@ describe("frontEndHost", () => {
                         }
                     ]
                 }
-            }
+            } as commandsAndEvents.KernelInfoProduced
         ));
         const kernel = compositeKernel.findKernelByName('sql');
         expect(kernel).to.not.be.undefined;

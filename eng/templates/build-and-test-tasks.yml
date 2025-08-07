@@ -1,5 +1,6 @@
 parameters:
   platform: ''
+  signType: ''
 
 steps:
 - ${{ if eq(parameters.platform, 'windows') }}:
@@ -11,6 +12,11 @@ steps:
     displayName: Add NodeJS/npm
     inputs:
       versionSpec: $(NodeJSVersion)
+
+  # This work around NPM issue https://github.com/npm/cli/issues/8468
+  # This issue should be resolved when v11.5.3 is released
+  - script: npm install -g npm@11.4.1
+    displayName: Downgrade npm to v11.4.1
 
   - script: |
       robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
@@ -59,6 +65,11 @@ steps:
       arguments: -stableToolVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
       workingDirectory: "$(Build.SourcesDirectory)/src"
       pwsh: true
+
+  - script: dotnet build $(Build.SourcesDirectory)\eng\msbuild\signVsix -bl -v:normal
+    displayName: Sign VS Code Extensions
+    env:
+      SignType: ${{ parameters.signType }}
 
   - task: PowerShell@2
     displayName: Pack NPM package

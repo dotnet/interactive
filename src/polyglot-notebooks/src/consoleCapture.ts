@@ -13,7 +13,7 @@ export class ConsoleCapture implements disposables.Disposable {
 
     constructor() {
         this.originalConsole = console;
-        console = <Console><any>this;
+        console = this as any as Console;
     }
 
     set kernelInvocationContext(value: KernelInvocationContext | undefined) {

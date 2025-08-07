@@ -38,7 +38,7 @@ function configure(global: any, context: KernelMessagingApi) {
     const webViewId = uuid();
     context.onDidReceiveKernelMessage((arg: any) => {
         if (arg.envelope && arg.webViewId === webViewId) {
-            const envelope = <connection.KernelCommandOrEventEnvelopeModel><any>(arg.envelope);
+            const envelope = arg.envelope as connection.KernelCommandOrEventEnvelopeModel;
             if (connection.isKernelEventEnvelopeModel(envelope)) {
                 Logger.default.info(`channel got ${envelope.eventType} with token ${envelope.command?.token}`);
                 const event = KernelEventEnvelope.fromJson(envelope);
@@ -49,12 +49,12 @@ function configure(global: any, context: KernelMessagingApi) {
             }
 
         } else if (arg.webViewId === webViewId) {
-            const kernelHost = (<KernelHost>(global['webview'].kernelHost));
+            const kernelHost = (global['webview'].kernelHost) as KernelHost;
             if (kernelHost) {
                 switch (arg.preloadCommand) {
                     case '#!connect': {
                         Logger.default.info(`connecting to kernels from extension host`);
-                        const kernelInfos = <KernelInfo[]>(arg.kernelInfos);
+                        const kernelInfos = arg.kernelInfos as KernelInfo[];
                         for (const kernelInfo of kernelInfos) {
                             const remoteUri = kernelInfo.isProxy ? kernelInfo.remoteUri! : kernelInfo.uri;
                             if (!kernelHost.tryGetConnector(remoteUri)) {
@@ -78,21 +78,21 @@ function configure(global: any, context: KernelMessagingApi) {
         localToRemote,
         remoteToLocal,
         () => {
-            const kernelInfos = (<KernelHost>(global['webview'].kernelHost)).getKernelInfos();
-            const hostUri = (<KernelHost>(global['webview'].kernelHost)).uri;
+            const kernelInfos = (global['webview'].kernelHost as KernelHost).getKernelInfos();
+            const hostUri = (global['webview'].kernelHost as KernelHost).uri;
             context.postKernelMessage({ preloadCommand: '#!connect', kernelInfos, hostUri, webViewId });
         }
     );
 }
 
 function configureRequire(interactive: any) {
-    if ((typeof (require) !== typeof (Function)) || (typeof ((<any>require).config) !== typeof (Function))) {
+    if ((typeof (require) !== typeof (Function)) || (typeof ((require as any).config) !== typeof (Function))) {
         let require_script = document.createElement('script');
         require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
         require_script.setAttribute('type', 'text/javascript');
         require_script.onload = function () {
             interactive.configureRequire = (confing: any) => {
-                return (<any>require).config(confing) || require;
+                return (require as any).config(confing) || require;
             };
 
         };
@@ -100,7 +100,7 @@ function configureRequire(interactive: any) {
 
     } else {
         interactive.configureRequire = (confing: any) => {
-            return (<any>require).config(confing) || require;
+            return (require as any).config(confing) || require;
         };
     }
 }

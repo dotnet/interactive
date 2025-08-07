@@ -28,23 +28,23 @@ export async function signalTransportFactory(rootUrl: string): Promise<{ sender:
 
     // deprecated
     connection.on("kernelEvent", (message: string) => {
-        let envelope = <KernelEventEnvelope>JSON.parse(message);
+        let envelope = JSON.parse(message) as KernelEventEnvelope;
         remoteToLocalSubject.next(envelope);
     });
 
     // deprecated
     connection.on("submitCommand", (message: string) => {
-        let envelope = <KernelCommandEnvelope>JSON.parse(message);
+        let envelope = JSON.parse(message) as KernelCommandEnvelope;
         remoteToLocalSubject.next(envelope);
     });
 
     connection.on("commandFromServer", (message: string) => {
-        let envelope = <KernelCommandEnvelope>JSON.parse(message);
+        let envelope = JSON.parse(message) as KernelCommandEnvelope;
         remoteToLocalSubject.next(envelope);
     });
 
     connection.on("eventFromServer", (message: string) => {
-        let envelope = <KernelEventEnvelope>JSON.parse(message);
+        let envelope = JSON.parse(message) as KernelEventEnvelope;
         remoteToLocalSubject.next(envelope);
     });
 

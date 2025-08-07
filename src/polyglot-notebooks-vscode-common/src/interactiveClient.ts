@@ -105,7 +105,7 @@ export class InteractiveClient {
                     this.eventListener(envelope);
 
                     if (envelope.eventType === KernelInfoProducedType) {
-                        const kernelInfoProduced = <KernelInfoProduced>envelope.event;
+                        const kernelInfoProduced = envelope.event as KernelInfoProduced;
                         connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced.kernelInfo, this._kernel);
                     }
                 }
@@ -135,7 +135,7 @@ export class InteractiveClient {
 
     public tryGetProperty<T>(propertyName: string): T | null {
         try {
-            return <T>((<any>this.config.channel)[propertyName]);
+            return (this.config.channel as any)[propertyName] as T;
         }
         catch {
             return null;
@@ -168,13 +168,13 @@ export class InteractiveClient {
             let failureReported = false;
             const command = new KernelCommandEnvelope(
                 SubmitCodeType,
-                <SubmitCode>{
+                {
                     code: source,
                     targetKernelName: cell.kernelName,
                     parameters: {
                         cellIndex: cell.index?.toString()
                     }
-                }
+                } as SubmitCode
             );
 
             const commandToken = command.getOrCreateToken();
@@ -199,7 +199,7 @@ export class InteractiveClient {
                         case CommandFailedType:
                             {
                                 if (eventEnvelope.command?.getToken() === commandToken) {
-                                    const err = <CommandFailed>eventEnvelope.event;
+                                    const err = eventEnvelope.event as CommandFailed;
                                     const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
                                     outputReporter(errorOutput);
                                     failureReported = true;
@@ -210,14 +210,14 @@ export class InteractiveClient {
                             }
                             break;
                         case ErrorProducedType: {
-                            const err = <ErrorProduced>eventEnvelope.event;
+                            const err = eventEnvelope.event as ErrorProduced;
                             const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
                             outputReporter(errorOutput);
                             failureReported = true;
                         }
                         case DiagnosticsProducedType:
                             {
-                                const diags = <DiagnosticsProduced>eventEnvelope.event;
+                                const diags = eventEnvelope.event as DiagnosticsProduced;
                                 diagnostics.push(...(diags.diagnostics ?? []));
                                 reportDiagnostics();
                             }
@@ -225,7 +225,7 @@ export class InteractiveClient {
                         case StandardErrorValueProducedType:
                         case StandardOutputValueProducedType:
                             {
-                                const disp = <DisplayEvent>eventEnvelope.event;
+                                const disp = eventEnvelope.event as DisplayEvent;
                                 const stream = eventEnvelope.eventType === StandardErrorValueProducedType ? 'stderr' : 'stdout';
                                 const output = this.displayEventToCellOutput(disp, stream);
                                 if (output) {
@@ -237,7 +237,7 @@ export class InteractiveClient {
                         case DisplayedValueUpdatedType:
                         case ReturnValueProducedType:
                             {
-                                const disp = <DisplayEvent>eventEnvelope.event;
+                                const disp = eventEnvelope.event as DisplayEvent;
                                 const output = this.displayEventToCellOutput(disp);
                                 if (output) {
                                     outputReporter(output);
@@ -248,7 +248,7 @@ export class InteractiveClient {
                 }).catch(e => {
                     // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                     if (!failureReported) {
-                        const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
+                        const errorMessage = typeof e?.message === 'string' ? e.message as string : '' + e;
                         const errorOutput = this.config.createErrorOutput(errorMessage, this.getNextOutputId());
                         outputReporter(errorOutput);
                         reject(e);
@@ -264,14 +264,14 @@ export class InteractiveClient {
     async completion(kernelName: string, code: string, line: number, character: number): Promise<CompletionsProduced> {
         const command = new KernelCommandEnvelope(
             RequestCompletionsType,
-            <RequestCompletions>{
+            {
                 code: code,
                 linePosition: {
                     line,
                     character
                 },
                 targetKernelName: kernelName
-            }
+            } as RequestCompletions
         );
         let result = await this.submitCommandAndGetResult<CompletionsProduced>(command, CompletionsProducedType, true);
         if (result === undefined) {
@@ -285,14 +285,14 @@ export class InteractiveClient {
     async hover(language: string, code: string, line: number, character: number): Promise<HoverTextProduced> {
         const command = new KernelCommandEnvelope(
             RequestHoverTextType,
-            <RequestHoverText>{
+            {
                 code: code,
                 linePosition: {
                     line: line,
                     character: character,
                 },
                 targetKernelName: language
-            }
+            } as RequestHoverText
         );
         let result = await this.submitCommandAndGetResult<HoverTextProduced>(command, HoverTextProducedType, true);
         if (result === undefined) {
@@ -306,14 +306,14 @@ export class InteractiveClient {
     async signatureHelp(language: string, code: string, line: number, character: number): Promise<SignatureHelpProduced> {
         const command = new KernelCommandEnvelope(
             RequestSignatureHelpType,
-            <RequestSignatureHelp>{
+            {
                 code,
                 linePosition: {
                     line,
                     character
                 },
                 targetKernelName: language
-            }
+            } as RequestSignatureHelp
         );
         let result = await this.submitCommandAndGetResult<SignatureHelpProduced>(command, SignatureHelpProducedType, true);
         if (result === undefined) {
@@ -329,10 +329,10 @@ export class InteractiveClient {
     async getDiagnostics(kernelName: string, code: string): Promise<Array<Diagnostic>> {
         const command = new KernelCommandEnvelope(
             RequestDiagnosticsType,
-            <RequestDiagnostics>{
+            {
                 code,
                 targetKernelName: kernelName
-            }
+            } as RequestDiagnostics
         );
 
         let diagsProduced = await this.submitCommandAndGetResult<DiagnosticsProduced>(command, DiagnosticsProducedType, true);
@@ -362,10 +362,10 @@ export class InteractiveClient {
     async requestValueInfos(kernelName: string): Promise<ValueInfosProduced> {
         const command = new KernelCommandEnvelope(
             RequestValueInfosType,
-            <RequestValueInfos>{
+            {
                 targetKernelName: kernelName,
                 mimeType: "text/plain+summary"
-            }
+            } as RequestValueInfos
         );
         const result = await (this.submitCommandAndGetResult<ValueInfosProduced>(command, ValueInfosProducedType));
         return result!;
@@ -374,9 +374,9 @@ export class InteractiveClient {
     async requestCodeExpansionInfos(): Promise<CodeExpansionInfosProduced> {
         const command = new KernelCommandEnvelope(
             RequestCodeExpansionInfosType,
-            <RequestCodeExpansionInfos>{
+            {
                 targetKernelName: ".NET", // FIX look up actual root kernel
-            }
+            } as RequestCodeExpansionInfos
         );
         const result = await (this.submitCommandAndGetResult<CodeExpansionInfosProduced>(command, CodeExpansionInfosProducedType));
         return result!;
@@ -385,11 +385,11 @@ export class InteractiveClient {
     async requestValue(valueName: string, kernelName: string): Promise<ValueProduced> {
         const command = new KernelCommandEnvelope(
             RequestValueType,
-            <RequestValue>{
+            {
                 name: valueName,
                 mimeType: 'text/plain',
                 targetKernelName: kernelName,
-            }
+            } as RequestValue
         );
         const result = await this.submitCommandAndGetResult<ValueProduced>(command, ValueProducedType);
         return result!;
@@ -398,7 +398,7 @@ export class InteractiveClient {
     cancel(): Promise<void> {
         const command = new KernelCommandEnvelope(
             CancelType,
-            <Cancel>{}
+            {} as Cancel
         );
         return this.submitCommand(command);
     }
@@ -406,7 +406,7 @@ export class InteractiveClient {
     dispose() {
         this.config.channel.sender.send(new KernelCommandEnvelope(
             QuitType,
-            <Quit>{},
+            {} as Quit
         ));
         this.config.channel.dispose();
         for (let disposable of this.disposables) {
@@ -432,7 +432,7 @@ export class InteractiveClient {
                         case CommandFailedType:
                             if (!handled && isRootCommand) {
                                 handled = true;
-                                let err = <CommandFailed>eventEnvelope.event;
+                                let err = eventEnvelope.event as CommandFailed;
                                 reject(err);
                                 disposable.dispose();
                             }
@@ -451,7 +451,7 @@ export class InteractiveClient {
                         default:
                             if (eventEnvelope.eventType === expectedEventType) {
                                 handled = true;
-                                let event = <TEvent>eventEnvelope.event;
+                                let event = eventEnvelope.event as TEvent;
                                 resolve(event);
                                 disposable.dispose();
                             }
@@ -471,7 +471,7 @@ export class InteractiveClient {
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
-                        let err = <CommandFailed>eventEnvelope.event;
+                        let err = eventEnvelope.event as CommandFailed;
                         failureReported = true;
                         if (eventEnvelope.command?.getToken() === token) {
                             disposable.dispose();
@@ -536,7 +536,7 @@ export class InteractiveClient {
                     case DisplayedValueProducedType:
                     case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
-                        let disp = <DisplayEvent>eventEnvelope.event;
+                        let disp = eventEnvelope.event as DisplayEvent;
                         let output = this.displayEventToCellOutput(disp);
                         if (output) {
                             this.deferredOutput.push(output);

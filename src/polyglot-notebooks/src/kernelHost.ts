@@ -183,7 +183,7 @@ export class KernelHost {
 
     public getKernelInfoProduced(): commandsAndEvents.KernelEventEnvelope[] {
         let events: commandsAndEvents.KernelEventEnvelope[] = Array.from(this.getKernelInfos().map(kernelInfo => {
-            const event = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.KernelInfoProducedType, <commandsAndEvents.KernelInfoProduced>{ kernelInfo: kernelInfo });
+            const event = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.KernelInfoProducedType, { kernelInfo: kernelInfo } as commandsAndEvents.KernelInfoProduced);
             event.routingSlip.stamp(kernelInfo.uri!);
             return event;
         }

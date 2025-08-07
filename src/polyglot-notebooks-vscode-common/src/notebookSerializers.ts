@@ -98,7 +98,7 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
 
 function toVsCodeNotebookCellData(cell: commandsAndEvents.InteractiveDocumentElement): vscode.NotebookCellData {
     const cellData = new vscode.NotebookCellData(
-        <number>languageToCellKind(cell.kernelName),
+        languageToCellKind(cell.kernelName) as number,
         cell.contents,
         cell.kernelName === 'markdown' ? 'markdown' : constants.CellLanguageIdentifier);
     const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {

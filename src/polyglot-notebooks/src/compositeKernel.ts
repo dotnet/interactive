@@ -41,7 +41,7 @@ export class CompositeKernel extends Kernel {
 
         const eventEnvelope = new commandsAndEvents.KernelEventEnvelope(
             commandsAndEvents.KernelInfoProducedType,
-            <commandsAndEvents.KernelInfoProduced>{ kernelInfo: this.kernelInfo },
+            { kernelInfo: this.kernelInfo } as commandsAndEvents.KernelInfoProduced,
             invocation.commandEnvelope
         );//?
 
@@ -105,18 +105,18 @@ export class CompositeKernel extends Kernel {
             invocationContext.commandEnvelope;
             const event = new commandsAndEvents.KernelEventEnvelope(
                 commandsAndEvents.KernelInfoProducedType,
-                <commandsAndEvents.KernelInfoProduced>{
+                {
                     kernelInfo: kernel.kernelInfo
-                },
+                } as commandsAndEvents.KernelInfoProduced,
                 invocationContext.commandEnvelope
             );
             invocationContext.publish(event);
         } else {
             const event = new commandsAndEvents.KernelEventEnvelope(
                 commandsAndEvents.KernelInfoProducedType,
-                <commandsAndEvents.KernelInfoProduced>{
+                {
                     kernelInfo: kernel.kernelInfo
-                }
+                } as commandsAndEvents.KernelInfoProduced
             );
             this.publishEvent(event);
         }

@@ -28,7 +28,7 @@ export class LanguageConfigurationManager {
                 const languageConfiguration = this.dynamicTokensProvider.getLanguageConfigurationFromKernelNameOrAlias(cell.notebook, notebookCellMetadata.kernelName);
                 if (languageConfiguration !== this._lastLanguageConfigurationObject) {
                     this._lastLanguageConfigurationObject = languageConfiguration;
-                    const typedLanguageConfiguration = <vscode.LanguageConfiguration>languageConfiguration;
+                    const typedLanguageConfiguration = languageConfiguration as vscode.LanguageConfiguration;
                     vscode.languages.setLanguageConfiguration(constants.CellLanguageIdentifier, typedLanguageConfiguration);
                 }
             }

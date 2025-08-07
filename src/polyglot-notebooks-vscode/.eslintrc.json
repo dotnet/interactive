@@ -8,10 +8,11 @@
   },
   "plugins": [
     "@typescript-eslint",
-    "deprecation"
+    "deprecation",
+    "@stylistic"
   ],
   "rules": {
-    "@typescript-eslint/semi": "warn",
+    "@stylistic/semi": "warn",
     "curly": "warn",
     "deprecation/deprecation": "warn",
     "eqeqeq": "warn",
