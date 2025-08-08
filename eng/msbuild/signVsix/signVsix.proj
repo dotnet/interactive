@@ -8,13 +8,13 @@
     <OutDir>$(RepoRoot)artifacts\vscode\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <FilesToSign Include="$(OutDir)stable-locked\*.vsix">
+    <FilesToSign Include="$(OutDir)stable-locked\*.signature.p7s">
       <Authenticode>VSCodePublisher</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(OutDir)stable\*.vsix">
+    <FilesToSign Include="$(OutDir)stable\*.signature.p7s">
       <Authenticode>VSCodePublisher</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(OutDir)insiders\*.vsix">
+    <FilesToSign Include="$(OutDir)insiders\*.signature.p7s">
       <Authenticode>VSCodePublisher</Authenticode>
     </FilesToSign>
   </ItemGroup>
