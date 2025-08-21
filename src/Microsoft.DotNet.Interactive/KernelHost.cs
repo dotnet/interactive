@@ -42,7 +42,7 @@ public class KernelHost : IDisposable
         _kernel = kernel;
         _defaultSender = sender;
         _receiver = receiver;
-        _defaultConnector = async (name) =>
+        _defaultConnector = async name =>
         {
             var connector = new DefaultKernelConnector(
                 _defaultSender,

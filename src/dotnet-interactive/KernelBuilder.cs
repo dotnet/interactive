@@ -27,7 +27,7 @@ public static class KernelBuilder
         string defaultKernelName,
         FrontendEnvironment frontendEnvironment,
         StartupOptions startupOptions,
-        TelemetrySender telemetrySender)
+        TelemetrySender telemetrySender = null)
     {
         using var _ = Log.OnEnterAndExit("Creating kernels");
 
@@ -84,7 +84,7 @@ public static class KernelBuilder
                      .UseCodeExpansions(GetCodeExpansionConfiguration(secretManager));
 
         kernel.AddConnectDirective(new ConnectSignalRDirective());
-        kernel.AddConnectDirective(new ConnectStdIoDirective(startupOptions.KernelHost));
+        kernel.AddConnectDirective(new ConnectStdIoDirective(startupOptions.KernelHostUri));
 
         kernel.AddConnectDirective(
             new ConnectJupyterKernelDirective()
@@ -95,7 +95,10 @@ public static class KernelBuilder
 
         kernel.DefaultKernelName = defaultKernelName;
 
-        kernel.UseTelemetrySender(telemetrySender);
+        if (telemetrySender is not null)
+        {
+            kernel.UseTelemetrySender(telemetrySender);
+        }
 
         return kernel;
     }

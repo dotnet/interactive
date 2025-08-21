@@ -12,7 +12,7 @@
     <PackageId>Microsoft.dotnet-interactive</PackageId>
     <ToolCommandName>dotnet-interactive</ToolCommandName>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Command line tool for interactive programming with C#, F#, and PowerShell, including support for Jupyter Notebooks.</PackageDescription>
+    <PackageDescription>Command line tool for interactive programming with C#, F#, PowerShell, and more. Powers Polyglot Notebooks and provides .NET support for Jupyter.</PackageDescription>
     <PackageTags>polyglot notebook dotnet interactive Jupyter csharp fsharp PowerShell</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Description>.NET Interactive</Description>
@@ -66,7 +66,6 @@
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
     <PackageReference Include="System.Reactive"  />
     <PackageReference Include="System.CommandLine" />
-    <PackageReference Include="System.CommandLine.NamingConventionBinder" />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" />
   </ItemGroup>
 
