@@ -35,6 +35,7 @@ td {
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
+    color: var(--vscode-quickInputList-focusForeground);
 }
 
 .actions {

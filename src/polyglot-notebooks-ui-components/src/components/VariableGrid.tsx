@@ -354,6 +354,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                     </symbol>
                 </svg>
                 <div id="toolbar" className="toolbar">
+                    <label htmlFor="search-filter" style={{ marginRight: 8 }}>Filter:</label> 
                     <input
                         id="search-filter"
                         aria-label="filter the grid results"
