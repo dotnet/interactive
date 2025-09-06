@@ -358,7 +358,6 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                     <input
                         id="search-filter"
                         aria-label="filter the grid results"
-                        placeholder="filter"
                         onKeyDown={(e) => this.cancelOnEscKey(e)}
                         onInput={(e) => this.handleInput(e)}
                     />
