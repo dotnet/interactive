@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine.Parsing;
 using System.Globalization;
 using System.IO;
 using System.Net;
@@ -21,6 +20,7 @@ using Pocket;
 using Serilog.Sinks.RollingFileAlternate;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Program>;
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
+using CommandLineParser = Microsoft.DotNet.Interactive.App.CommandLine.CommandLineParser;
 
 namespace Microsoft.DotNet.Interactive.App;
 
@@ -33,7 +33,9 @@ public class Program
         Console.OutputEncoding = Encoding.UTF8;
         SetCultureFromEnvironmentVariables();
 
-        return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
+        var rootCommand = CommandLineParser.Create(_serviceCollection);
+
+        return await rootCommand.Parse(args).InvokeAsync();
     }
 
     public static void SetCultureFromEnvironmentVariables()

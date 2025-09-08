@@ -1,8 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.CommandLine.IO;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Assent;
@@ -18,9 +18,8 @@ public class JupyterInstallCommandTests
     [Fact]
     public async Task Appends_http_port_range_arguments()
     {
-        var console = new TestConsole();
         var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
-        var kernelSpecInstaller = new JupyterKernelSpecInstaller(console,kernelSpecModule);
+        var kernelSpecInstaller = new JupyterKernelSpecInstaller(new StringWriter(), new StringWriter(), kernelSpecModule);
         var jupyterCommandLine = new JupyterInstallCommand(kernelSpecInstaller, new HttpPortRange(100, 400));
 
         await jupyterCommandLine.InvokeAsync();
@@ -44,9 +43,8 @@ public class JupyterInstallCommandTests
             .UsingExtension($"kernelspec_{displayName.Replace(".", "_").Replace(" ", "_")}.txt")
             .SetInteractive(Debugger.IsAttached);
 
-        var console = new TestConsole();
         var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
-        var kernelSpecInstaller = new JupyterKernelSpecInstaller(console, kernelSpecModule);
+        var kernelSpecInstaller = new JupyterKernelSpecInstaller(new StringWriter(), new StringWriter(), kernelSpecModule);
         var jupyterCommandLine = new JupyterInstallCommand(kernelSpecInstaller, new HttpPortRange(100, 400));
 
         await jupyterCommandLine.InvokeAsync();
@@ -59,13 +57,13 @@ public class JupyterInstallCommandTests
     [Fact]
     public async Task Returns_error_when_jupyter_paths_could_not_be_obtained()
     {
-        var console = new TestConsole();
         var kernelSpecModule = new JupyterKernelSpecModuleSimulator(false);
-        var kernelSpecInstaller = new JupyterKernelSpecInstaller(console, kernelSpecModule);
+        var error = new StringWriter();
+        var kernelSpecInstaller = new JupyterKernelSpecInstaller(new StringWriter(), error, kernelSpecModule);
         var installCommand = new JupyterInstallCommand(kernelSpecInstaller);
 
         await installCommand.InvokeAsync();
-        var consoleError = console.Error.ToString();
+        var consoleError = error.ToString();
         using var scope = new AssertionScope();
         consoleError.Should().Contain("Failed to install \".NET (F#)\" kernel.");
         consoleError.Should().Contain("Failed to install \".NET (C#)\" kernel.");
@@ -75,14 +73,14 @@ public class JupyterInstallCommandTests
     [Fact]
     public async Task Prints_to_console_when_kernel_installation_succeeded()
     {
-        var console = new TestConsole();
         var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
-        var kernelSpecInstaller = new JupyterKernelSpecInstaller(console, kernelSpecModule);
+        var output = new StringWriter();
+        var kernelSpecInstaller = new JupyterKernelSpecInstaller(output, new StringWriter(), kernelSpecModule);
         var jupyterCommandLine = new JupyterInstallCommand(kernelSpecInstaller);
 
         await jupyterCommandLine.InvokeAsync();
 
-        var consoleOut = console.Out.ToString();
+        var consoleOut = output.ToString();
 
         using var scope = new AssertionScope();
 

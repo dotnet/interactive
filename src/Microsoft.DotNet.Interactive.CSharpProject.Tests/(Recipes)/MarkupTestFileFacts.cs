@@ -24,8 +24,7 @@ public class MarkupTestFileFacts
     public void GetPosition_Should_Return_Correct_Position()
     {
         var input = "some$$string";
-        string output;
-        MarkupTestFile.GetPosition(input, out output, out var position);
+        MarkupTestFile.GetPosition(input, out var output, out var position);
         Assert.Equal(4, position);
     }
 

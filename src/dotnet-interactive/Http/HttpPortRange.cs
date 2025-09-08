@@ -15,7 +15,7 @@ public class HttpPortRange
         
     public int End { get;  }
 
-    public static HttpPortRange Default { get; } = new(2048,3000);
+    public static HttpPortRange Default { get; } = new(2048, 3000);
 
     public override string ToString() => $"{Start}-{End}";
 }

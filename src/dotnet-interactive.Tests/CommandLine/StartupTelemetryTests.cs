@@ -2,28 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine.IO;
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.IO;
 using System.Threading.Tasks;
-
 using FluentAssertions;
-
-using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
-
 using Pocket;
-
 using Xunit;
+using CommandLineParser = Microsoft.DotNet.Interactive.App.CommandLine.CommandLineParser;
 
 namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine;
 
 public class StartupTelemetryTests : IDisposable
 {
     private readonly FakeTelemetrySender _fakeTelemetrySender;
-    private readonly TestConsole _console = new();
-    private readonly Parser _parser;
+    private readonly RootCommand _rootCommand;
     private readonly FileInfo _connectionFile;
     private readonly CompositeDisposable _disposables = new();
     private readonly FakeFirstTimeUseNoticeSentinel _firstTimeUseNoticeSentinel;
@@ -47,11 +41,11 @@ public class StartupTelemetryTests : IDisposable
 
         _fakeTelemetrySender = new FakeTelemetrySender(_firstTimeUseNoticeSentinel);
 
-        _parser = CommandLineParser.Create(
+        _rootCommand = CommandLineParser.Create(
             new ServiceCollection(),
-            startServer: (options, invocationContext) => { },
-            jupyter: (startupOptions, console, startServer, context) => Task.FromResult(1),
-            startKernelHost: (startupOptions, host, console) => Task.FromResult(1),
+            startWebServer: _ => { },
+            startJupyter: (_, _) => Task.FromResult(1),
+            startStdio: (_, _) => Task.FromResult(1),
             telemetrySender: _fakeTelemetrySender);
     }
 
@@ -60,7 +54,8 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Jupyter_standalone_command_sends_telemetry()
     {
-        await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
+        var parseResult = _rootCommand.Parse($"jupyter {_connectionFile}");
+        await parseResult.InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties["verb"] == "JUPYTER".ToSha256Hash() &&
@@ -70,14 +65,14 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Jupyter_standalone_command_has_one_entry()
     {
-        await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task Jupyter_default_kernel_csharp_sends_telemetry()
     {
-        await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --default-kernel csharp {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties["verb"] == "JUPYTER".ToSha256Hash() &&
@@ -87,14 +82,14 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Jupyter_default_kernel_csharp_has_one_entry()
     {
-        await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --default-kernel csharp {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task Jupyter_default_kernel_fsharp_sends_telemetry()
     {
-        await _parser.InvokeAsync($"jupyter --default-kernel fsharp {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --default-kernel fsharp {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties["verb"] == "JUPYTER".ToSha256Hash() &&
@@ -104,14 +99,14 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Jupyter_default_kernel_fsharp_has_one_entry()
     {
-        await _parser.InvokeAsync($"jupyter --default-kernel fsharp {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --default-kernel fsharp {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task Jupyter_install_sends_telemetry()
     {
-        await _parser.InvokeAsync("jupyter install", _console);
+        await _rootCommand.Parse("jupyter install").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties["verb"] == "JUPYTER".ToSha256Hash() &&
@@ -121,7 +116,7 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Jupyter_install_has_one_entry()
     {
-        await _parser.InvokeAsync($"jupyter install", _console);
+        await _rootCommand.Parse($"jupyter install").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
@@ -129,7 +124,7 @@ public class StartupTelemetryTests : IDisposable
     public async Task Jupyter_default_kernel_csharp_ignore_connection_file_sends_telemetry()
     {
         var tmp = Path.GetTempFileName();
-        await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --default-kernel csharp {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties["verb"] == "JUPYTER".ToSha256Hash() &&
@@ -140,7 +135,7 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Jupyter_default_kernel_csharp_ignore_connection_file_has_one_entry()
     {
-        await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --default-kernel csharp {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
@@ -148,7 +143,7 @@ public class StartupTelemetryTests : IDisposable
     public async Task Jupyter_ignore_connection_file_sends_telemetry()
     {
         // Do not capture connection file
-        await _parser.InvokeAsync($"jupyter  {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter  {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties["verb"] == "JUPYTER".ToSha256Hash() &&
@@ -158,14 +153,14 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Jupyter_ignore_connection_file_has_one_entry()
     {
-        await _parser.InvokeAsync($"jupyter  {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter  {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task Jupyter_with_verbose_option_sends_telemetry_just_for_jupyter_command()
     {
-        await _parser.InvokeAsync($"--verbose jupyter  {_connectionFile}", _console);
+        await _rootCommand.Parse($"--verbose jupyter  {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties["verb"] == "JUPYTER".ToSha256Hash() &&
@@ -175,14 +170,14 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Jupyter_with_verbose_option_has_one_entry()
     {
-        await _parser.InvokeAsync($"--verbose jupyter {_connectionFile}", _console);
+        await _rootCommand.Parse($"--verbose jupyter {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task Jupyter_with_invalid_argument_does_not_send_any_telemetry()
     {
-        await _parser.InvokeAsync("jupyter invalidargument", _console);
+        await _rootCommand.Parse("jupyter invalidargument").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().BeEmpty();
     }
 
@@ -190,14 +185,14 @@ public class StartupTelemetryTests : IDisposable
     public async Task Jupyter_default_kernel_with_invalid_kernel_does_not_send_any_telemetry()
     {
         // Do not capture anything, especially "oops".
-        await _parser.InvokeAsync($"jupyter --default-kernel oops {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --default-kernel oops {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().BeEmpty();
     }
 
     [Fact]
     public async Task Jupyter_command_sends_frontend_telemetry()
     {
-        await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter {_connectionFile}").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count == 3 &&
@@ -210,7 +205,7 @@ public class StartupTelemetryTests : IDisposable
     public async Task Jupyter_install_command_sends_default_frontend_telemetry()
     {
         var defaultFrontend = GetDefaultFrontendName();
-        await _parser.InvokeAsync("jupyter install", _console);
+        await _rootCommand.Parse("jupyter install").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count == 3 &&
@@ -223,14 +218,15 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task Invalid_command_is_does_not_send_any_telemetry()
     {
-        await _parser.InvokeAsync("invalidcommand", _console);
+        await _rootCommand.Parse("invalidcommand").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().BeEmpty();
     }
 
     [Fact]
     public async Task stdio_command_sends_frontend_telemetry()
     {
-        await _parser.InvokeAsync("[synapse] stdio", _console);
+        _rootCommand.Parse("[synapse] stdio").Errors.Should().HaveCount(0);
+        await _rootCommand.Parse("[synapse] stdio").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count == 3 &&
@@ -245,7 +241,7 @@ public class StartupTelemetryTests : IDisposable
         Environment.SetEnvironmentVariable("CODESPACES", "true");
         try
         {
-            await _parser.InvokeAsync("[vscode] stdio", _console);
+            await _rootCommand.Parse("[vscode] stdio").InvokeAsync(new() { Output = new StringWriter() });
 
 
             _fakeTelemetrySender.TelemetryEvents.Should().Contain(
@@ -267,7 +263,7 @@ public class StartupTelemetryTests : IDisposable
         Environment.SetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME", "test_runner");
         try
         {
-            await _parser.InvokeAsync("stdio", _console);
+            await _rootCommand.Parse("stdio").InvokeAsync(new() { Output = new StringWriter() });
 
 
             _fakeTelemetrySender.TelemetryEvents.Should().Contain(
@@ -286,7 +282,7 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task vscode_is_a_valid_frontend_for_stdio()
     {
-        await _parser.InvokeAsync("[vscode] stdio", _console);
+        await _rootCommand.Parse("[vscode] stdio").InvokeAsync(new() { Output = new StringWriter() });
 
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
@@ -300,7 +296,7 @@ public class StartupTelemetryTests : IDisposable
     public async Task stdio_command_sends_default_frontend_telemetry()
     {
         var defaultFrontend = GetDefaultFrontendName();
-        await _parser.InvokeAsync("stdio", _console);
+        await _rootCommand.Parse("stdio").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count == 3 &&
@@ -319,7 +315,7 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task stdio_standalone_command_sends_telemetry()
     {
-        await _parser.InvokeAsync("stdio", _console);
+        await _rootCommand.Parse("stdio").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count >= 2 &&
@@ -330,14 +326,14 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task stdio_command_has_one_entry()
     {
-        await _parser.InvokeAsync("stdio", _console);
+        await _rootCommand.Parse("stdio").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task stdio_default_kernel_csharp_sends_telemetry()
     {
-        await _parser.InvokeAsync("stdio --default-kernel csharp", _console);
+        await _rootCommand.Parse("stdio --default-kernel csharp").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count >= 2 &&
@@ -348,14 +344,14 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task stdio_default_kernel_csharp_has_one_entry()
     {
-        await _parser.InvokeAsync("stdio --default-kernel csharp", _console);
+        await _rootCommand.Parse("stdio --default-kernel csharp").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task stdio_default_kernel_fsharp_sends_telemetry()
     {
-        await _parser.InvokeAsync("stdio --default-kernel fsharp", _console);
+        await _rootCommand.Parse("stdio --default-kernel fsharp").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count >= 2 &&
@@ -366,7 +362,7 @@ public class StartupTelemetryTests : IDisposable
     [Fact]
     public async Task stdio_default_kernel_fsharp_has_one_entry()
     {
-        await _parser.InvokeAsync("stdio --default-kernel fsharp", _console);
+        await _rootCommand.Parse("stdio --default-kernel fsharp").InvokeAsync(new() { Output = new StringWriter() });
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
@@ -379,8 +375,9 @@ public class StartupTelemetryTests : IDisposable
         Environment.SetEnvironmentVariable(environmentVariableName, null);
         try
         {
-            await _parser.InvokeAsync($"jupyter  {_connectionFile}", _console);
-            _console.Out.ToString().Should().Contain(TelemetrySender.WelcomeMessage);
+            var output = new StringWriter();
+            await _rootCommand.Parse($"jupyter  {_connectionFile}").InvokeAsync(new() { Output = output });
+            output.ToString().Should().Contain(TelemetrySender.WelcomeMessage);
         }
         finally
         {
@@ -397,8 +394,9 @@ public class StartupTelemetryTests : IDisposable
         Environment.SetEnvironmentVariable(environmentVariableName, "1");
         try
         {
-            await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
-            _console.Out.ToString().Should().NotContain(TelemetrySender.WelcomeMessage);
+            var output = new StringWriter();
+            await _rootCommand.Parse($"jupyter {_connectionFile}").InvokeAsync(new() { Output = output });
+            output.ToString().Should().NotContain(TelemetrySender.WelcomeMessage);
         }
         finally
         {
@@ -436,16 +434,15 @@ public class StartupTelemetryTests : IDisposable
 
             var parser = CommandLineParser.Create(
                 new ServiceCollection(),
-                startServer: (options, invocationContext) => { },
-                jupyter: (startupOptions, console, startServer, context) => Task.FromResult(1),
-                startKernelHost: (startupOptions, host, console) => Task.FromResult(1),
+                startWebServer: _ => { },
+                startJupyter: (_, _) => Task.FromResult(1),
+                startStdio: (_, _) => Task.FromResult(1),
                 telemetrySender: telemetrySender);
 
-            await parser.InvokeAsync(
+            await parser.Parse(
                 $"""
-                [vs] stdio --working-dir {Directory.GetCurrentDirectory()} --kernel-host 9628-5c7e913f-8966-4afe-8d37-cc863292a352
-                """,
-                _console);
+                 [vs] stdio --working-dir {Directory.GetCurrentDirectory()} --kernel-host 9628-5c7e913f-8966-4afe-8d37-cc863292a352
+                 """).InvokeAsync(new() { Output = new StringWriter() });
 
             if (isSkipFirstTimeExperienceEnvironmentVariableSet || firstTimeExperienceSentinelExists)
             {
