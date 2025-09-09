@@ -22,13 +22,16 @@ try {
     # create .npmrc with package feed
     $registryPublishTokenBase64 = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($registryPublishToken))
     $npmrcContents = "
+registry=https://$registryUrl
 ; begin auth token
 //$registryUrl`:username=$registryUser
 //$registryUrl`:_password=$registryPublishTokenBase64
 //$registryUrl`:email=$registryEmail
+//$registryUrl`:_accessToken=$registryPublishToken
 //$feedUrl`:username=$registryUser
 //$feedUrl`:_password=$registryPublishTokenBase64
 //$feedUrl`:email=$registryEmail
+//$feedUrl`:_accessToken=$registryPublishToken
 ; end auth token"
 
     $npmrcContents | Out-File "$artifactDirectory/.npmrc"
