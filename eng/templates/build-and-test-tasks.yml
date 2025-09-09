@@ -13,10 +13,19 @@ steps:
     inputs:
       versionSpec: $(NodeJSVersion)
 
-  # This work around NPM issue https://github.com/npm/cli/issues/8468
-  # This issue should be resolved when v11.5.3 is released
-  - script: npm install -g npm@11.4.1
-    displayName: Downgrade npm to v11.4.1
+  - script: |
+      echo "npm version (before):"
+      npm --version
+    displayName: Log npm version (before)
+
+  - script: |
+      npm install -g npm@11.6.0
+    displayName: Install npm v11.6.0
+
+  - script: |
+      echo "npm version (after):"
+      npm --version
+    displayName: Log npm version (after)
 
   - script: |
       robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
