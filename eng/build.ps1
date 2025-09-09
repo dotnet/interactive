@@ -38,6 +38,10 @@ try {
     )
     foreach ($npmDir in $npmDirs) {
         Push-Location "$repoRoot\$npmDir"
+
+        # Disable strictmode to work around running in https://github.com/npm/cli/issues/8468 when invoking npm
+        Set-StrictMode -off
+
         Write-Host "Building NPM in directory $npmDir"
         npm ci
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -49,6 +53,8 @@ try {
             npm run ciTest
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         }
+
+        Set-StrictMode -version 2.0
 
         Pop-Location
     }
