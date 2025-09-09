@@ -27,9 +27,11 @@ registry=https://$registryUrl
 //$registryUrl`:username=$registryUser
 //$registryUrl`:_password=$registryPublishTokenBase64
 //$registryUrl`:email=$registryEmail
+//$registryUrl`:_accessToken=$registryPublishToken
 //$feedUrl`:username=$registryUser
 //$feedUrl`:_password=$registryPublishTokenBase64
 //$feedUrl`:email=$registryEmail
+//$feedUrl`:_accessToken=$registryPublishToken
 ; end auth token"
 
     $npmrcContents | Out-File "$artifactDirectory/.npmrc"
