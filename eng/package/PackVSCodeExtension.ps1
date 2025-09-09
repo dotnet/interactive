@@ -7,7 +7,7 @@ param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
-function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDirectory, [string] $packageVersionNumber, [string] $kernelVersionNumber = "") {
+function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDirectory, [string] $packageVersionNumber, [string] $kernelVersionNumber = "", [bool] $isPrerelease = false) {
     Push-Location $packageDirectory
 
     $packageJsonPath = Join-Path (Get-Location) "package.json"
@@ -28,9 +28,14 @@ function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDi
     }
     EnsureCleanDirectory -location "$outDir\$outputSubDirectory"
 
+    $additionalArgs = ""
+    if ($isPrerelease) {
+        $additionalArgs = "--pre-release"
+    }   
+
     # pack
     Write-Host "Packing extension"
-    npx @vscode/vsce package -o "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
+    npx @vscode/vsce package $additionalArgs -o "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
 
     Write-Host "Generating extension manifest"
     npx @vscode/vsce generate-manifest -i "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix" -o "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.manifest"
@@ -52,7 +57,7 @@ try {
     $insidersPackageVersion = "${stableToolVersionNumber}1"
     Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion
     Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode" -outputSubDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
-    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode-insiders" -outputSubDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber
+    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode-insiders" -outputSubDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber -isPrerelease true
 }
 catch {
     Write-Host $_
