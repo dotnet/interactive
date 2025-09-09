@@ -63,10 +63,10 @@ When you do this locally while authenticated, any packages _not_ on the internal
 ## Publish VS Code Extension
 
 ### Publishing to insiders
-You could use [this pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1409) to publish the extension to insiders. Make sure that you choose the right version from the signed build to publish.
+You could use [this pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1409) to publish the extension to insiders. Make sure that the build containing the changes has completed successfully [here](https://dev.azure.com/dnceng/internal/_build?definitionId=743&_a=summary) and matches the version you are trying to publish (by default this should automatically consider the latest successful signed build).
 
 ### Publishing to Stable
-You could use [this pipeline] (https://dev.azure.com/dnceng/internal/_build?definitionId=1411) to publish to stable. Note that this also publishes the same version to insiders as well and publish our nuget packages to nuget.org. Make sure that you choose the right version from the signed build to publish.
+You could use [this pipeline] (https://dev.azure.com/dnceng/internal/_build?definitionId=1411) to publish to stable. Note that this also publishes the same version to insiders as well and publish our nuget packages to nuget.org. Make sure that the build containing the changes has completed successfully [here](https://dev.azure.com/dnceng/internal/_build?definitionId=743&_a=summary) and matches the version you are trying to publish (by default this should automatically consider the latest successful signed build).
 
 The new extension will appear in the VS Code marketplace approximately 10 minutes later, after the marketplace has run their own internal validation.
 
