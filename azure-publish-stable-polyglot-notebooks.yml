@@ -71,7 +71,7 @@ extends:
 
         # Authenticate with Azure and publish extension
         - task: AzureCLI@2
-          displayName: 'Authenticate with Azure and Publish Extension'
+          displayName: 'Publish Extension (both insiders and stable) and Publish nuget packages'
           inputs:
             azureSubscription: 'VSCode Marketplace Publishing'
             scriptType: 'pscore'
