@@ -14,16 +14,23 @@ Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
 try {
+    $feedUrl = $registryUrl
+    if ($feedUrl.EndsWith("registry/")) {
+        $feedUrl = $feedUrl.Substring(0, $feedUrl.Length - "registry/".Length)
+    }
+
     # create .npmrc with package feed
     $registryPublishTokenBase64 = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($registryPublishToken))
     $npmrcContents = "
 ; begin auth token
-registry=https://$registryUrl
-username=$registryUser
-email=$registryEmail
-_password=$registryPublishTokenBase64
-_accessToken=$registryPublishToken
+//$registryUrl`:username=$registryUser
+//$registryUrl`:_password=$registryPublishTokenBase64
+//$registryUrl`:email=$registryEmail
+//$feedUrl`:username=$registryUser
+//$feedUrl`:_password=$registryPublishTokenBase64
+//$feedUrl`:email=$registryEmail
 ; end auth token"
+
     $npmrcContents | Out-File "$artifactDirectory/.npmrc"
 
     # publish to feed
