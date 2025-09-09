@@ -7,7 +7,7 @@ param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
-function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDirectory, [string] $packageVersionNumber, [string] $kernelVersionNumber = "", [bool] $isPrerelease = false) {
+function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDirectory, [string] $packageVersionNumber, [string] $kernelVersionNumber = "", [bool] $isPrerelease = $false) {
     Push-Location $packageDirectory
 
     $packageJsonPath = Join-Path (Get-Location) "package.json"
@@ -55,9 +55,9 @@ try {
 
     $stablePackageVersion = "${stableToolVersionNumber}0"
     $insidersPackageVersion = "${stableToolVersionNumber}1"
-    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion
+    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion 
     Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode" -outputSubDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
-    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode-insiders" -outputSubDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber -isPrerelease true
+    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode-insiders" -outputSubDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber -isPrerelease $true
 }
 catch {
     Write-Host $_
