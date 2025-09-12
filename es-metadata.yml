@@ -5,4 +5,4 @@ accountableOwners:
 routing:
   defaultAreaPath:
     org: devdiv
-    path: DevDiv\NET Developer Experience\VS Testing
+    path: DevDiv\NET Developer Experience\VS Testing\Interactive
