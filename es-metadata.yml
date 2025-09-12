@@ -1,0 +1,8 @@
+schemaVersion: 0.0.1
+isProduction: true
+accountableOwners:
+  service: ec89f3d6-2d1d-48e8-9b0f-d1a335605423
+routing:
+  defaultAreaPath:
+    org: devdiv
+    path: DevDiv\NET Developer Experience\VS Testing
