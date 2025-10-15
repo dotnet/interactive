@@ -187,6 +187,16 @@ export async function activate(context: vscode.ExtensionContext) {
                                 .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath);
                             break;
 
+                        case "folder":
+                            value = await vscode.window.showOpenDialog({
+                                canSelectFiles: false,
+                                canSelectFolders: true,
+                                title: prompt,
+                                canSelectMany: false
+                            })
+                                .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath);
+                            break;
+
                         default:
                             value = await vscode.window.showInputBox({ prompt, password, ignoreFocusOut: true });
                             break;
