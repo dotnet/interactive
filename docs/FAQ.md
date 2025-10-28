@@ -393,3 +393,25 @@ This error indicates that a call to a .NET Interactive formatting API such as `D
 
 The error is shown because a formatted value from the .NET Interactive kernel has been formatted using a MIME type that VS Code doesn't know how to render. VS Code can only render notebook outputs in MIME types for which there's an installed [notebook renderer](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer). Notebook renderers are independent of the kernel and can be [installed from the Visual Studio Marketplace](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer).  
 
+### Diagnostic logs
+
+You can enable diagnostic logging by editing the Polyglot Notebooks extension's settings for `Kernel Transport Args` and adding the following command line arguments:
+
+```diff
+"dotnet-interactive.kernelTransportArgs": [
+    "{dotnet_path}",
+    "tool",
+    "run",
+    "dotnet-interactive",
+    "--",
+    "[vscode]",
+    "stdio",
+    "--working-dir",
+    "{working_dir}",
++   "--log-path",
++   "c:\\temp\\your-log-folder-name",
++   "--verbose",
+],
+```
+
+![Image](https://github.com/user-attachments/assets/cf75e69f-177a-4275-9f44-88dc0c2571f5)
