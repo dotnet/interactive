@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
@@ -33,6 +33,8 @@ public class SignatureHelpTests : LanguageKernelTestBase
     [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;", "Add(1,$$)", 0, "int Add(int a, int b)", 1, "b")]
     [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;\nint Sub(int c, int d) => c - d;", "Add(Sub($$", 0, "int Sub(int c, int d)", 0, "c")]
     [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;\nint Sub(int c, int d) => c - d;", "Add(Sub(1, 2),$$", 0, "int Add(int a, int b)", 1, "b")]
+    [InlineData(Language.FSharp, "let add a b = a + b", "add $$", 0, "add : a: int -> b: int -> int", 0, "a: int")]
+    [InlineData(Language.FSharp, "let add a b = a + b", "add 1 $$", 0, "add : a: int -> b: int -> int", 1, "b: int")]
     public async Task correct_signature_help_is_displayed(Language language, string submittedCode, string markupCode, int activeSignature, string signaureLabel, int activeParameter, string parameterName)
     {
         var kernel = CreateKernel(language);
@@ -83,6 +85,7 @@ public class SignatureHelpTests : LanguageKernelTestBase
 
     [Theory]
     [InlineData(Language.CSharp, "System.Environment.GetEnvironmentVariable($$", 0, "Retrieves the value of an environment variable from the current process")]
+    [InlineData(Language.FSharp, "System.Environment.GetEnvironmentVariable($$", 0, "Retrieves the value of an environment variable from the current process")]
     public async Task signature_help_can_return_doc_comments_from_bcl_types(Language language, string markupCode, int activeSignature, string expectedDocumentationSubstring)
     {
         using var kernel = CreateKernel(language);

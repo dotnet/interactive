@@ -1243,6 +1243,15 @@ let formatTipEnhanced
   (typeDoc: string option)
   (formatCommentStyle: FormatCommentStyle)
   : (string * string * string) list list =
+  
+  // Normalize signature: ensure space before colon in type annotations
+  // The new FsAutoComplete SignatureFormatter produces "val foo: int" but tests expect "val foo : int"
+  let normalizedSignature = 
+      if signature.Contains(":") then
+          System.Text.RegularExpressions.Regex.Replace(signature, @"(\w+):\s*", "$1 : ")
+      else
+          signature
+  
   tips
   |> List.choose (function
     | ToolTipElement.Group items ->
@@ -1261,7 +1270,7 @@ let formatTipEnhanced
               + nl
               + formatGenericParameters i.TypeMapping
 
-          (signature, comment, footer))
+          (normalizedSignature, comment, footer))
       )
     | ToolTipElement.CompositionError (error) -> Some [ ("<Note>", error, "") ]
     | _ -> None)
