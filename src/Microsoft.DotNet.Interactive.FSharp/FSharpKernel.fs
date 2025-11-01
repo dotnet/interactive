@@ -373,78 +373,77 @@ type FSharpKernel () as this =
         }
 
     let handleRequestSignatureHelp (requestSignatureHelp: RequestSignatureHelp) (context: KernelInvocationContext) =
-        task {
-            let parse, check, _ctx = script.Value.Fsi.ParseAndCheckInteraction requestSignatureHelp.Code
-            let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
-            let text = FSharp.Compiler.Text.SourceText.ofString requestSignatureHelp.Code
+        let parse, check, _ctx = script.Value.Fsi.ParseAndCheckInteraction requestSignatureHelp.Code
+        let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
+        let text = FSharp.Compiler.Text.SourceText.ofString requestSignatureHelp.Code
             
-            // FCS uses 1-based line numbers
-            let line = requestSignatureHelp.LinePosition.Line + 1
-            let col = requestSignatureHelp.LinePosition.Character
+        // FCS uses 1-based line numbers
+        let line = requestSignatureHelp.LinePosition.Line + 1
+        let col = requestSignatureHelp.LinePosition.Character
             
-            let lineContent = text.GetLineString(line - 1)
+        let lineContent = text.GetLineString(line - 1)
             
-            match res.TryGetSignatureData (mkPos line col) lineContent with
-            | Ok (returnType, parameterGroups, generics) ->
-                // Detect active parameter by counting spaces before cursor
-                // In F# function calls, parameters are separated by spaces
-                let textBeforeCursor = lineContent.Substring(0, min col lineContent.Length)
-                let openParenIndex = textBeforeCursor.LastIndexOf '('
-                let textInCall = 
-                    if openParenIndex >= 0 then
-                        textBeforeCursor.Substring(openParenIndex + 1)
-                    else
-                        textBeforeCursor
+        match res.TryGetSignatureData (mkPos line col) lineContent with
+        | Ok (returnType, parameterGroups, generics) ->
+            // Detect active parameter by counting spaces before cursor
+            // In F# function calls, parameters are separated by spaces
+            let textBeforeCursor = lineContent.Substring(0, min col lineContent.Length)
+            let openParenIndex = textBeforeCursor.LastIndexOf '('
+            let textInCall = 
+                if openParenIndex >= 0 then
+                    textBeforeCursor.Substring(openParenIndex + 1)
+                else
+                    textBeforeCursor
                 
-                // Count spaces to estimate parameter position (rough heuristic)
-                let activeParameter = 
-                    let spaceCount = textInCall.Split([|' '|], StringSplitOptions.RemoveEmptyEntries).Length - 1
-                    Math.Min(spaceCount, (parameterGroups |> List.collect id |> List.length) - 1) |> max 0
+            // Count spaces to estimate parameter position (rough heuristic)
+            let activeParameter = 
+                let spaceCount = textInCall.Split([|' '|], StringSplitOptions.RemoveEmptyEntries).Length - 1
+                Math.Min(spaceCount, (parameterGroups |> List.collect id |> List.length) - 1) |> max 0
                 
-                // Build signature information
-                let parameters = 
-                    parameterGroups
-                    |> List.collect id  // Flatten curried parameter groups
-                    |> List.map (fun (name, paramType) ->
-                        ParameterInformation(
-                            label = sprintf $"{name}: {paramType}",
-                            documentation = FormattedValue("text/markdown", "")))
+            // Build signature information
+            let parameters = 
+                parameterGroups
+                |> List.collect id  // Flatten curried parameter groups
+                |> List.map (fun (name, paramType) ->
+                    ParameterInformation(
+                        label = sprintf $"{name}: {paramType}",
+                        documentation = FormattedValue("text/markdown", "")))
                 
-                // Format the full signature with parameter groups
-                let paramsFormatted = 
-                    parameterGroups
-                    |> List.map (fun group ->
-                        group
-                        |> List.map (fun (name, paramType) -> sprintf "%s: %s" name paramType)
-                        |> String.concat " * ")
-                    |> String.concat " -> "
+            // Format the full signature with parameter groups
+            let paramsFormatted = 
+                parameterGroups
+                |> List.map (fun group ->
+                    group
+                    |> List.map (fun (name, paramType) -> sprintf "%s: %s" name paramType)
+                    |> String.concat " * ")
+                |> String.concat " -> "
                 
-                let genericsFormatted =
-                    if List.isEmpty generics then ""
-                    else sprintf "<%s>" (String.concat ", " generics)
+            let genericsFormatted =
+                if List.isEmpty generics then ""
+                else sprintf "<%s>" (String.concat ", " generics)
                 
-                // Get function name from symbol at position
-                let functionName =
-                    match res.TryGetSymbolUse (mkPos line col) lineContent with
-                    | Some symbolUse -> symbolUse.Symbol.DisplayName
-                    | None -> ""
+            // Get function name from symbol at position
+            let functionName =
+                match res.TryGetSymbolUse (mkPos line col) lineContent with
+                | Some symbolUse -> symbolUse.Symbol.DisplayName
+                | None -> ""
                 
-                let label = 
-                    if String.IsNullOrWhiteSpace paramsFormatted then
-                        sprintf $"{functionName}{genericsFormatted} : {returnType}"
-                    else
-                        sprintf $"{functionName}{genericsFormatted} : {paramsFormatted} -> {returnType}"
+            let label = 
+                if String.IsNullOrWhiteSpace paramsFormatted then
+                    sprintf $"{functionName}{genericsFormatted} : {returnType}"
+                else
+                    sprintf $"{functionName}{genericsFormatted} : {paramsFormatted} -> {returnType}"
                 
-                let signature = SignatureInformation(
-                    label = label,
-                    documentation = FormattedValue("text/markdown", ""),
-                    parameters = parameters)
+            let signature = SignatureInformation(
+                label = label,
+                documentation = FormattedValue("text/markdown", ""),
+                parameters = parameters)
                 
-                context.Publish(SignatureHelpProduced(requestSignatureHelp, [signature], activeSignatureIndex = 0, activeParameterIndex = activeParameter))
-            | Error _ ->
-                // No signature help available at this position
-                ()
-        }
+            context.Publish(SignatureHelpProduced(requestSignatureHelp, [signature], activeSignatureIndex = 0, activeParameterIndex = activeParameter))
+            Task.FromResult ()
+        | Error _ ->
+            // No signature help available at this position
+            Task.FromResult ()
 
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         task {
