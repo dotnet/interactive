@@ -3,6 +3,8 @@ module FsAutoComplete.Patterns
 
 open FSharp.Compiler.CodeAnalysis
 open FSharp.Compiler.Symbols
+open FSharp.Compiler.Text
+
 
 /// Active patterns over `FSharpSymbolUse`.
 module SymbolUse =
@@ -27,7 +29,7 @@ module SymbolUse =
           |> Option.toList
           |> List.map (fun fullName ->
             if ent.GenericParameters.Count > 0 && fullName.Length > 2 then
-              fullName.[0 .. fullName.Length - 3] //Get name without sufix specifing number of generic arguments (for example `'2`)
+              fullName.[0 .. fullName.Length - 3] //Get name without suffix specifying number of generic arguments (for example `'2`)
             else
               fullName)
 
@@ -69,7 +71,7 @@ module SymbolUse =
     | :? FSharpParameter as param -> Some param
     | _ -> None
 
-  let (|StaticParameter|_|) (symbol: FSharpSymbolUse) = Some
+  let (|StaticParameter|_|) (_symbol: FSharpSymbolUse) = Some
 
 
   let (|UnionCase|_|) (symbol: FSharpSymbolUse) =
@@ -85,13 +87,13 @@ module SymbolUse =
 
   let (|TypeAbbreviation|_|) =
     function
-    | Entity (entity, _) when entity.IsFSharpAbbreviation -> Some entity
+    | Entity(entity, _) when entity.IsFSharpAbbreviation -> Some entity
     | _ -> None
 
   let (|Class|_|) =
     function
-    | Entity (entity, _) when entity.IsClass -> Some entity
-    | Entity (entity, _) when
+    | Entity(entity, _) when entity.IsClass -> Some entity
+    | Entity(entity, _) when
       entity.IsFSharp
       && entity.IsOpaque
       && not entity.IsFSharpModule
@@ -107,7 +109,7 @@ module SymbolUse =
 
   let (|Delegate|_|) =
     function
-    | Entity (entity, _) when entity.IsDelegate -> Some entity
+    | Entity(entity, _) when entity.IsDelegate -> Some entity
     | _ -> None
 
   let (|Event|_|) =
@@ -208,37 +210,37 @@ module SymbolUse =
 
   let (|Enum|_|) =
     function
-    | Entity (entity, _) when entity.IsEnum -> Some entity
+    | Entity(entity, _) when entity.IsEnum -> Some entity
     | _ -> None
 
   let (|Interface|_|) =
     function
-    | Entity (entity, _) when entity.IsInterface -> Some entity
+    | Entity(entity, _) when entity.IsInterface -> Some entity
     | _ -> None
 
   let (|Module|_|) =
     function
-    | Entity (entity, _) when entity.IsFSharpModule -> Some entity
+    | Entity(entity, _) when entity.IsFSharpModule -> Some entity
     | _ -> None
 
   let (|Namespace|_|) =
     function
-    | Entity (entity, _) when entity.IsNamespace -> Some entity
+    | Entity(entity, _) when entity.IsNamespace -> Some entity
     | _ -> None
 
   let (|Record|_|) =
     function
-    | Entity (entity, _) when entity.IsFSharpRecord -> Some entity
+    | Entity(entity, _) when entity.IsFSharpRecord -> Some entity
     | _ -> None
 
   let (|Union|_|) =
     function
-    | Entity (entity, _) when entity.IsFSharpUnion -> Some entity
+    | Entity(entity, _) when entity.IsFSharpUnion -> Some entity
     | _ -> None
 
   let (|ValueType|_|) =
     function
-    | Entity (entity, _) when entity.IsValueType && not entity.IsEnum -> Some entity
+    | Entity(entity, _) when entity.IsValueType && not entity.IsEnum -> Some entity
     | _ -> None
 
   let (|ComputationExpression|_|) (symbol: FSharpSymbolUse) =
@@ -249,11 +251,36 @@ module SymbolUse =
 
   let (|Attribute|_|) =
     function
-    | Entity (entity, _) when entity.IsAttributeType -> Some entity
+    | Entity(entity, _) when entity.IsAttributeType -> Some entity
     | _ -> None
 
-[<AutoOpen>]
+  let trySignatureLocation (signatureLocation: range option) =
+    match signatureLocation with
+    | None -> None
+    | Some signatureLocation ->
+      if not (isSignatureFileStr (signatureLocation.FileName)) then
+        None
+      else
+        Some signatureLocation
+
+  let (|IsInSignature|_|) (symbolUse: FSharpSymbolUse) = trySignatureLocation symbolUse.Symbol.SignatureLocation
+
+  let (|IsParentInSignature|_|) (symbolUse: FSharpSymbolUse) =
+    match trySignatureLocation symbolUse.Symbol.SignatureLocation with
+    // We are interested in the scenarios when the current symbol is not in a signature file but the parent is.
+    | Some _ -> None
+    | None ->
+      let parentOpt =
+        match symbolUse.Symbol with
+        | :? FSharpEntity as entity -> entity.DeclaringEntity
+        | :? FSharpMemberOrFunctionOrValue as mfv -> mfv.DeclaringEntity
+        | _ -> None
+
+      parentOpt
+      |> Option.bind (fun parentEntity -> trySignatureLocation parentEntity.SignatureLocation)
+
 /// Active patterns over `FSharpSymbol`.
+[<AutoOpen>]
 module SymbolPatterns =
 
   let private attributeSuffixLength = "Attribute".Length
@@ -271,7 +298,7 @@ module SymbolPatterns =
           |> Option.toList
           |> List.map (fun fullName ->
             if ent.GenericParameters.Count > 0 && fullName.Length > 2 then
-              fullName.[0 .. fullName.Length - 3] //Get name without sufix specifing number of generic arguments (for example `'2`)
+              fullName.[0 .. fullName.Length - 3] //Get name without suffix specifying number of generic arguments (for example `'2`)
             else
               fullName)
 
@@ -300,7 +327,7 @@ module SymbolPatterns =
           |> Option.toList
           |> List.map (fun fullName ->
             if ent.GenericParameters.Count > 0 && fullName.Length > 2 then
-              fullName.[0 .. fullName.Length - 3] //Get name without sufix specifing number of generic arguments (for example `'2`)
+              fullName.[0 .. fullName.Length - 3] //Get name without suffix specifying number of generic arguments (for example `'2`)
             else
               fullName)
 
@@ -347,7 +374,7 @@ module SymbolPatterns =
       let getBaseType (entity: FSharpEntity) =
         try
           match entity.BaseType with
-          | Some (TypeWithDefinition def) -> Some def
+          | Some(TypeWithDefinition def) -> Some def
           | _ -> None
         with _ ->
           None
@@ -380,16 +407,13 @@ module SymbolPatterns =
     else
       None
 
-  let (|Record|_|) (e: FSharpEntity) =
-    if e.IsFSharpRecord then Some() else None
+  let (|Record|_|) (e: FSharpEntity) = if e.IsFSharpRecord then Some() else None
 
-  let (|UnionType|_|) (e: FSharpEntity) =
-    if e.IsFSharpUnion then Some() else None
+  let (|UnionType|_|) (e: FSharpEntity) = if e.IsFSharpUnion then Some() else None
 
   let (|Delegate|_|) (e: FSharpEntity) = if e.IsDelegate then Some() else None
 
-  let (|FSharpException|_|) (e: FSharpEntity) =
-    if e.IsFSharpExceptionDeclaration then Some() else None
+  let (|FSharpException|_|) (e: FSharpEntity) = if e.IsFSharpExceptionDeclaration then Some() else None
 
   let (|Interface|_|) (e: FSharpEntity) = if e.IsInterface then Some() else None
 
@@ -413,32 +437,28 @@ module SymbolPatterns =
     else
       None
 
-  let (|ProvidedType|_|) (e: FSharpEntity) = None
+  let (|ProvidedType|_|) (_e: FSharpEntity) = None
 
 
   let (|ByRef|_|) (e: FSharpEntity) = if e.IsByRef then Some() else None
   let (|Array|_|) (e: FSharpEntity) = if e.IsArrayType then Some() else None
 
-  let (|FSharpModule|_|) (entity: FSharpEntity) =
-    if entity.IsFSharpModule then Some() else None
+  let (|FSharpModule|_|) (entity: FSharpEntity) = if entity.IsFSharpModule then Some() else None
 
-  let (|Namespace|_|) (entity: FSharpEntity) =
-    if entity.IsNamespace then Some() else None
+  let (|Namespace|_|) (entity: FSharpEntity) = if entity.IsNamespace then Some() else None
 
-  let (|ProvidedAndErasedType|_|) (entity: FSharpEntity) = None
+  let (|ProvidedAndErasedType|_|) (_entity: FSharpEntity) = None
 
   let (|Enum|_|) (entity: FSharpEntity) = if entity.IsEnum then Some() else None
 
-  let (|Tuple|_|) (ty: FSharpType option) =
-    ty |> Option.bind (fun ty -> if ty.IsTupleType then Some() else None)
+  let (|Tuple|_|) (ty: FSharpType option) = ty |> Option.bind (fun ty -> if ty.IsTupleType then Some() else None)
 
   let (|RefCell|_|) (ty: FSharpType) =
     match getAbbreviatedType ty with
     | TypeWithDefinition def when def.IsFSharpRecord && def.FullName = "Microsoft.FSharp.Core.FSharpRef`1" -> Some()
     | _ -> None
 
-  let (|FunctionType|_|) (ty: FSharpType) =
-    if ty.IsFunctionType then Some() else None
+  let (|FunctionType|_|) (ty: FSharpType) = if ty.IsFunctionType then Some() else None
 
   let (|Pattern|_|) (symbol: FSharpSymbol) =
     match symbol with
@@ -519,8 +539,7 @@ module SymbolPatterns =
       | _ -> None
     | _ -> None
 
-  let (|ExtensionMember|_|) (func: FSharpMemberOrFunctionOrValue) =
-    if func.IsExtensionMember then Some() else None
+  let (|ExtensionMember|_|) (func: FSharpMemberOrFunctionOrValue) = if func.IsExtensionMember then Some() else None
 
   let (|Event|_|) (func: FSharpMemberOrFunctionOrValue) = if func.IsEvent then Some() else None
 

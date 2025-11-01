@@ -29,7 +29,7 @@ module private Section =
       content
       |> Seq.map (fun kv ->
         let text =
-          if kv.Value.Contains("\n") then
+          if kv.Value.Contains '\n' then
             kv.Value.Split('\n')
             |> Seq.map (fun line -> "> " + line.TrimStart())
             |> String.concat Environment.NewLine
@@ -41,8 +41,7 @@ module private Section =
       |> String.concat nl
       |> addSection name
 
-  let fromOption (name: string) (content: string option) =
-    if content.IsNone then "" else addSection name content.Value
+  let fromOption (name: string) (content: string option) = if content.IsNone then "" else addSection name content.Value
 
   let fromList (name: string) (content: string seq) =
     if Seq.isEmpty content then
@@ -69,8 +68,7 @@ module private Format =
     { TagName: string
       Formatter: TagInfo -> string option }
 
-  let private extractTextFromQuote (quotedText: string) =
-    quotedText.Substring(1, quotedText.Length - 2)
+  let private extractTextFromQuote (quotedText: string) = quotedText.Substring(1, quotedText.Length - 2)
 
 
   let extractMemberText (text: string) =
@@ -143,7 +141,7 @@ module private Format =
           // otherwise it will create an infinity loop
           text
       else
-        // Should not happend but like that we are sure to handle all possible cases
+        // Should not happened but like that we are sure to handle all possible cases
         text
     | _ -> text
 
@@ -153,25 +151,57 @@ module private Format =
         function
         | VoidElement _ -> None
 
-        | NonVoidElement (innerText, attributes) ->
+        | NonVoidElement(innerText, attributes) ->
           let lang =
             match lang attributes with
             | Some lang -> lang
 
             | None -> "forceNoHighlight"
 
+          // We need to trim the end of the text because the
+          // user write XML comments with a space between the '///'
+          // and the '<code>' tag. Then it mess up identification of new lines
+          // at the end of the code snippet.
+          // Example:
+          // /// <code>
+          // ///   var x = 1;
+          // /// </code>
+          //    ^ This space is the one we need to remove
+          let innerText = innerText.TrimEnd()
+
+          // Try to detect how the code snippet is formatted
+          // so render the markdown code block the best way
+          // by avoid empty lines at the beginning or the end
           let formattedText =
-            if innerText.Contains("\n") then
+            match
+              innerText.StartsWith("\n", StringComparison.Ordinal), innerText.EndsWith("\n", StringComparison.Ordinal)
+            with
+            | true, true -> sprintf "```%s%s```" lang innerText
+            | true, false -> sprintf "```%s%s\n```" lang innerText
+            | false, true -> sprintf "```%s\n%s```" lang innerText
+            | false, false -> sprintf "```%s\n%s\n```" lang innerText
 
-              if innerText.StartsWith("\n") then
+          Some formattedText
 
-                sprintf "```%s%s\n```" lang innerText
+    }
+    |> applyFormatter
 
-              else
-                sprintf "```%s\n%s\n```" lang innerText
+  let private example =
+    { TagName = "example"
+      Formatter =
+        function
+        | VoidElement _ -> None
 
-            else
-              sprintf "`%s`" innerText
+        | NonVoidElement(innerText, _) ->
+          let formattedText =
+            nl
+            + nl
+            // This try to keep a visual consistency and indicate that this
+            // "Example section" is part of it parent section (summary, remarks, etc.)
+            + """Example:"""
+            + nl
+            + nl
+            + innerText
 
           Some formattedText
 
@@ -183,7 +213,7 @@ module private Format =
       Formatter =
         function
         | VoidElement _ -> None
-        | NonVoidElement (innerText, _) -> "`" + innerText + "`" |> Some }
+        | NonVoidElement(innerText, _) -> "`" + innerText + "`" |> Some }
     |> applyFormatter
 
   let private link text uri = $"[`%s{text}`](%s{uri})"
@@ -198,7 +228,7 @@ module private Format =
           | Some href -> Some(link href href)
           | None -> None
 
-        | NonVoidElement (innerText, attributes) ->
+        | NonVoidElement(innerText, attributes) ->
           match href attributes with
           | Some href -> Some(link innerText href)
           | None -> Some(code innerText) }
@@ -210,7 +240,7 @@ module private Format =
         function
         | VoidElement _ -> None
 
-        | NonVoidElement (innerText, _) -> nl + innerText + nl |> Some }
+        | NonVoidElement(innerText, _) -> nl + innerText + nl |> Some }
     |> applyFormatter
 
   let private block =
@@ -219,7 +249,7 @@ module private Format =
         function
         | VoidElement _ -> None
 
-        | NonVoidElement (innerText, _) -> nl + innerText + nl |> Some }
+        | NonVoidElement(innerText, _) -> nl + innerText + nl |> Some }
     |> applyFormatter
 
   let private see =
@@ -237,7 +267,7 @@ module private Format =
       Formatter =
         function
         | VoidElement attributes -> formatFromAttributes attributes
-        | NonVoidElement (innerText, attributes) ->
+        | NonVoidElement(innerText, attributes) ->
           if String.IsNullOrWhiteSpace innerText then
             formatFromAttributes attributes
           else
@@ -255,7 +285,7 @@ module private Format =
           | Some href -> Some(link href href)
           | None -> None
 
-        | NonVoidElement (innerText, attributes) ->
+        | NonVoidElement(innerText, attributes) ->
           if String.IsNullOrWhiteSpace innerText then
             match href attributes with
             | Some href -> Some(link innerText href)
@@ -273,7 +303,7 @@ module private Format =
           | Some name -> Some(code name)
           | None -> None
 
-        | NonVoidElement (innerText, attributes) ->
+        | NonVoidElement(innerText, attributes) ->
           if String.IsNullOrWhiteSpace innerText then
             match name attributes with
             | Some name ->
@@ -295,7 +325,7 @@ module private Format =
           | Some name -> Some(code name)
           | None -> None
 
-        | NonVoidElement (innerText, attributes) ->
+        | NonVoidElement(innerText, attributes) ->
           if String.IsNullOrWhiteSpace innerText then
             match name attributes with
             | Some name ->
@@ -371,7 +401,7 @@ module private Format =
         // CaseC of the or section
         //
         // The original comments is for `System.Uri("")`
-        // By making the assumption that an 'or' section is always single line this allows us the detact the "<block></block>" section
+        // By making the assumption that an 'or' section is always single line this allows us to detect the "<block></block>" section
 
         // orText is on a single line, we just add quotation syntax
         if lastParagraphStartIndex = -1 then
@@ -395,7 +425,7 @@ module private Format =
   /// If an 'or' block is found between 2 elements then we remove it as we can't generate a valid markdown for it
   ///
   /// For example, <td> Some text -or- another text </td> cannot be converted into a multiline string
-  /// and so we prefer to remove the 'or' block instead of having some weird markdown artefacts
+  /// and so we prefer to remove the 'or' block instead of having some weird markdown artifacts
   ///
   /// For now, we only consider text between <td></td> to be invalid
   /// We can add more in the future if needed, but I want to keep this as minimal as possible to avoid capturing false positive
@@ -407,17 +437,19 @@ module private Format =
     Regex.Matches(text, invalidOrBlockPattern, RegexOptions.Multiline)
     |> Seq.cast<Match>
     |> Seq.fold
-         (fun (state: string) (m: Match) ->
-           let orText = m.Groups.["or_text"]
+      (fun (state: string) (m: Match) ->
+        let orText = m.Groups.["or_text"]
 
-           if orText.Success then
-             let replacement = orText.Value.Replace("-or-", "or")
+        if orText.Success then
+          let replacement = orText.Value.Replace("-or-", "or")
 
-             state.Replace(orText.Value, replacement)
-           else
-             state)
-         text
+          state.Replace(orText.Value, replacement)
+        else
+          state)
+      text
 
+
+  let private thsPattern = Regex "<th\s?>"
 
   let private convertTable =
     { TagName = "table"
@@ -425,9 +457,9 @@ module private Format =
         function
         | VoidElement _ -> None
 
-        | NonVoidElement (innerText, _) ->
+        | NonVoidElement(innerText, _) ->
 
-          let rowCount = Regex.Matches(innerText, "<th\s?>").Count
+          let rowCount = thsPattern.Matches(innerText).Count
 
           let convertedTable =
             innerText
@@ -454,6 +486,7 @@ module private Format =
   type private Term = string
   type private Definition = string
 
+  [<Struct>]
   type private ListStyle =
     | Bulleted
     | Numbered
@@ -474,7 +507,7 @@ module private Format =
     match item with
     | DescriptionOnly description -> prefix + " " + description
     | TermOnly term -> prefix + " " + "**" + term + "**"
-    | Definitions (term, description) -> prefix + " " + "**" + term + "** - " + description
+    | Definitions(term, description) -> prefix + " " + "**" + term + "** - " + description
 
   let private list =
     let getType (attributes: Map<string, string>) = Map.tryFind "type" attributes
@@ -497,14 +530,14 @@ module private Format =
           None
       | _ -> None
 
-    let tryGetDescription (text: string) =
-      tryGetInnerTextOnNonVoidElement text "description"
+    let tryGetDescription (text: string) = tryGetInnerTextOnNonVoidElement text "description"
 
-    let tryGetTerm (text: string) =
-      tryGetInnerTextOnNonVoidElement text "term"
+    let tryGetTerm (text: string) = tryGetInnerTextOnNonVoidElement text "term"
+
+    let itmPattern = Regex(tagPattern "item", RegexOptions.IgnoreCase)
 
     let rec extractItemList (res: ItemList list) (text: string) =
-      match Regex.Match(text, tagPattern "item", RegexOptions.IgnoreCase) with
+      match itmPattern.Match text with
       | m when m.Success ->
         let newText = text.Substring(m.Value.Length)
 
@@ -527,8 +560,10 @@ module private Format =
           extractItemList res newText
       | _ -> res
 
+    let listHeader = Regex(tagPattern "listheader", RegexOptions.IgnoreCase)
+
     let rec extractColumnHeader (res: string list) (text: string) =
-      match Regex.Match(text, tagPattern "listheader", RegexOptions.IgnoreCase) with
+      match listHeader.Match text with
       | m when m.Success ->
         let newText = text.Substring(m.Value.Length)
 
@@ -537,7 +572,7 @@ module private Format =
 
           let rec extractAllTerms (res: string list) (text: string) =
             match tryGetNonVoidElement text "term" with
-            | Some (fullString, innerText) ->
+            | Some(fullString, innerText) ->
               let escapedRegex = Regex(Regex.Escape(fullString))
               let newText = escapedRegex.Replace(text, "", 1)
               extractAllTerms (res @ [ innerText ]) newText
@@ -548,9 +583,10 @@ module private Format =
           extractColumnHeader res newText
       | _ -> res
 
+    let itemPattern = Regex(tagPattern "item", RegexOptions.IgnoreCase)
 
     let rec extractRowsForTable (res: (string list) list) (text: string) =
-      match Regex.Match(text, tagPattern "item", RegexOptions.IgnoreCase) with
+      match itemPattern.Match text with
       | m when m.Success ->
         let newText = text.Substring(m.Value.Length)
 
@@ -559,7 +595,7 @@ module private Format =
 
           let rec extractAllTerms (res: string list) (text: string) =
             match tryGetNonVoidElement text "term" with
-            | Some (fullString, innerText) ->
+            | Some(fullString, innerText) ->
               let escapedRegex = Regex(Regex.Escape(fullString))
               let newText = escapedRegex.Replace(text, "", 1)
               extractAllTerms (res @ [ innerText ]) newText
@@ -575,7 +611,7 @@ module private Format =
         function
         | VoidElement _ -> None
 
-        | NonVoidElement (innerText, attributes) ->
+        | NonVoidElement(innerText, attributes) ->
           let listStyle =
             match getType attributes with
             | Some "bullet" -> Bulleted
@@ -614,7 +650,7 @@ module private Format =
                    " | " + header)
                |> String.concat ""
 
-             let seprator =
+             let separator =
                columnHeaders
                |> List.mapi (fun index _ ->
                  if index = 0 then "| ---"
@@ -639,7 +675,7 @@ module private Format =
              Environment.NewLine
              + columnHeadersText
              + Environment.NewLine
-             + seprator
+             + separator
              + Environment.NewLine
              + itemsText)
           |> Some }
@@ -651,12 +687,7 @@ module private Format =
   /// For example, this allows to print '>' in the tooltip instead of '&gt;'
   /// </summary>
   let private unescapeSpecialCharacters (text: string) =
-    text
-      .Replace("&lt;", "<")
-      .Replace("&gt;", ">")
-      .Replace("&quot;", "\"")
-      .Replace("&apos;", "'")
-      .Replace("&amp;", "&")
+    text.Replace("&lt;", "<").Replace("&gt;", ">").Replace("&quot;", "\"").Replace("&apos;", "'").Replace("&amp;", "&")
 
   let applyAll (text: string) =
     text
@@ -665,6 +696,7 @@ module private Format =
     |> removeInvalidOrBlock
     // Start the transformation process
     |> paragraph
+    |> example
     |> block
     |> codeInline
     |> codeBlock
@@ -679,6 +711,13 @@ module private Format =
     |> handleMicrosoftOrList
     |> unescapeSpecialCharacters
 
+[<RequireQualifiedAccess; Struct>]
+type FormatCommentStyle =
+  | Legacy
+  | FullEnhanced
+  | SummaryOnly
+  | Documentation
+
 // TODO: Improve this parser. Is there any other XmlDoc parser available?
 type private XmlDocMember(doc: XmlDocument, indentationSize: int, columnOffset: int) =
   /// References used to detect if we should remove meaningless spaces
@@ -690,12 +729,15 @@ type private XmlDocMember(doc: XmlDocument, indentationSize: int, columnOffset: 
     | _ ->
       let content =
         // Normale the EOL
-        // This make it easier to work with line splittig
+        // This make it easier to work with line splitting
         node.InnerXml.Replace("\r\n", "\n") |> Format.applyAll
 
       content.Split('\n')
       |> Array.map (fun line ->
-        if not (String.IsNullOrWhiteSpace line) && line.StartsWith(tabsOffset) then
+        if
+          not (String.IsNullOrWhiteSpace line)
+          && line.StartsWith(tabsOffset, StringComparison.Ordinal)
+        then
           line.Substring(columnOffset + indentationSize)
         else
           line)
@@ -707,8 +749,7 @@ type private XmlDocMember(doc: XmlDocument, indentationSize: int, columnOffset: 
     |> Seq.map (fun node -> Format.extractMemberText node.Attributes.[0].InnerText, node)
     |> Seq.toList
 
-  let readRemarks (doc: XmlDocument) =
-    doc.DocumentElement.GetElementsByTagName "remarks" |> Seq.cast<XmlNode>
+  let readRemarks (doc: XmlDocument) = doc.DocumentElement.GetElementsByTagName "remarks" |> Seq.cast<XmlNode>
 
   let rawSummary = doc.DocumentElement.ChildNodes.[0]
   let rawParameters = readChildren "param" doc
@@ -722,10 +763,19 @@ type private XmlDocMember(doc: XmlDocument, indentationSize: int, columnOffset: 
     |> Seq.tryHead
 
   let rawExamples =
-    doc.DocumentElement.GetElementsByTagName "example" |> Seq.cast<XmlNode>
+    doc.DocumentElement.GetElementsByTagName "example"
+    |> Seq.cast<XmlNode>
+    // We need to filter out the examples node that are children
+    // of another "main" node
+    // This is because if the example node is inside a "main" node
+    // then we render it in place.
+    // So we don't need to render it independently in the Examples section
+    |> Seq.filter (fun node ->
+      [ "summary"; "param"; "returns"; "exception"; "remarks"; "typeparam" ]
+      |> List.contains node.ParentNode.Name
+      |> not)
 
-  let readNamedContentAsKvPair (key, content) =
-    KeyValuePair(key, readContentForTooltip content)
+  let readNamedContentAsKvPair (key, content) = KeyValuePair(key, readContentForTooltip content)
 
   let summary = readContentForTooltip rawSummary
 
@@ -767,6 +817,8 @@ type private XmlDocMember(doc: XmlDocument, indentationSize: int, columnOffset: 
     else
       "**Description**" + nl + nl + summary
 
+  member __.HasTruncatedExamples = examples |> Seq.isEmpty |> not
+
   member __.ToFullEnhancedString() =
     let content =
       summary
@@ -775,7 +827,6 @@ type private XmlDocMember(doc: XmlDocument, indentationSize: int, columnOffset: 
       + Section.fromKeyValueList "Parameters" parameters
       + Section.fromOption "Returns" returns
       + Section.fromKeyValueList "Exceptions" exceptions
-      + Section.fromList "Examples" examples
       + Section.fromList "See also" seeAlso
 
     // If we where unable to process the doc comment, then just output it as it is
@@ -798,11 +849,19 @@ type private XmlDocMember(doc: XmlDocument, indentationSize: int, columnOffset: 
     + Section.fromList "Examples" examples
     + Section.fromList "See also" seeAlso
 
+  member this.FormatComment(formatStyle: FormatCommentStyle) =
+    match formatStyle with
+    | FormatCommentStyle.Legacy -> this.ToString()
+    | FormatCommentStyle.SummaryOnly -> this.ToSummaryOnlyString()
+    | FormatCommentStyle.FullEnhanced -> this.ToFullEnhancedString()
+    | FormatCommentStyle.Documentation -> this.ToDocumentationString()
+
+
 let rec private readXmlDoc (reader: XmlReader) (indentationSize: int) (acc: Map<string, XmlDocMember>) =
   let acc' =
     match reader.Read() with
     | false -> indentationSize, None
-    // Assembly is the first node in the XML and is at least always indended by 1 "tab"
+    // Assembly is the first node in the XML and is at least always intended by 1 "tab"
     // So we used it as a reference to detect the tabs sizes
     // This is needed because `netstandard.xml` use 2 spaces tabs
     // Where when building a C# classlib, the xml file use 4 spaces size for example
@@ -835,6 +894,28 @@ let rec private readXmlDoc (reader: XmlReader) (indentationSize: int) (acc: Map<
 let private xmlDocCache =
   Collections.Concurrent.ConcurrentDictionary<string, Map<string, XmlDocMember>>()
 
+let private findCultures v =
+  let rec loop state (v: System.Globalization.CultureInfo) =
+    let state' = v.Name :: state
+
+    if v.Parent = System.Globalization.CultureInfo.InvariantCulture then
+      "" :: state' |> List.rev
+    else
+      loop state' v.Parent
+
+  loop [] v
+
+let private findLocalizedXmlFile (xmlFile: string) =
+  let xmlName = Path.GetFileName xmlFile
+  let path = Path.GetDirectoryName xmlFile
+
+  findCultures System.Globalization.CultureInfo.CurrentUICulture
+  |> List.map (fun culture -> Path.Combine(path, culture, xmlName))
+  |> List.tryFind File.Exists
+  |> Option.defaultValue xmlFile
+
+let pPattern = Regex """(<p .*?>)+(.*)(<\/?p>)*"""
+
 let private getXmlDoc dllFile =
   let xmlFile = Path.ChangeExtension(dllFile, ".xml")
   //Workaround for netstandard.dll
@@ -848,9 +929,11 @@ let private getXmlDoc dllFile =
     else
       xmlFile
 
-  if xmlDocCache.ContainsKey xmlFile then
-    Some xmlDocCache.[xmlFile]
-  else
+  let xmlFile = findLocalizedXmlFile xmlFile
+
+  match xmlDocCache.TryGetValue xmlFile with
+  | true, cachedXmlFile -> Some cachedXmlFile
+  | false, _ ->
     let rec exists filePath tryAgain =
       match File.Exists filePath, tryAgain with
       | true, _ -> Some filePath
@@ -871,7 +954,7 @@ let private getXmlDoc dllFile =
         //Workaround for netstandard xmlDoc
         let cnt =
           if actualXmlFile.Contains "netstandard.xml" then
-            let cnt = Regex.Replace(cnt, """(<p .*?>)+(.*)(<\/?p>)*""", "$2")
+            let cnt = pPattern.Replace(cnt, "$2")
 
             cnt.Replace("<p>", "").Replace("</p>", "").Replace("<br>", "")
           else
@@ -884,23 +967,30 @@ let private getXmlDoc dllFile =
         xmlDocCache.AddOrUpdate(xmlFile, xmlDoc, (fun _ _ -> xmlDoc)) |> ignore
 
         Some xmlDoc
-      with ex ->
+      with _ ->
         None // TODO: Remove the empty map from cache to try again in the next request?
-
-[<RequireQualifiedAccess>]
-type FormatCommentStyle =
-  | Legacy
-  | FullEnhanced
-  | SummaryOnly
-  | Documentation
 
 // --------------------------------------------------------------------------------------
 // Formatting of tool-tip information displayed in F# IntelliSense
 // --------------------------------------------------------------------------------------
-let private buildFormatComment cmt (formatStyle: FormatCommentStyle) (typeDoc: string option) =
-  match cmt with
-  | FSharpXmlDoc.FromXmlText xmldoc ->
-    try
+
+[<RequireQualifiedAccess>]
+type private TryGetXmlDocMemberResult =
+  | Some of XmlDocMember
+  | None
+  | Error
+
+[<RequireQualifiedAccess>]
+type TipFormatterResult<'T> =
+  | Success of 'T
+  | Error of string
+  | None
+
+let private tryGetXmlDocMember (xmlDoc: FSharpXmlDoc) =
+  try
+    match xmlDoc with
+    | FSharpXmlDoc.FromXmlText xmldoc ->
+
       let document = xmldoc.GetXmlText()
       // We create a "fake" XML document in order to use the same parser for both libraries and user code
       let xml = sprintf "<fake>%s</fake>" document
@@ -911,7 +1001,7 @@ let private buildFormatComment cmt (formatStyle: FormatCommentStyle) (typeDoc: s
       let rec findIndentationSize (lines: string list) =
         match lines with
         | head :: tail ->
-          let lesserThanIndex = head.IndexOf("<")
+          let lesserThanIndex = head.IndexOf('<', StringComparison.Ordinal)
 
           if lesserThanIndex <> -1 then
             lesserThanIndex
@@ -924,44 +1014,26 @@ let private buildFormatComment cmt (formatStyle: FormatCommentStyle) (typeDoc: s
 
       let xmlDoc = XmlDocMember(doc, indentationSize, 0)
 
-      match formatStyle with
-      | FormatCommentStyle.Legacy -> xmlDoc.ToString()
-      | FormatCommentStyle.SummaryOnly -> xmlDoc.ToSummaryOnlyString()
-      | FormatCommentStyle.FullEnhanced -> xmlDoc.ToFullEnhancedString()
-      | FormatCommentStyle.Documentation -> xmlDoc.ToDocumentationString()
+      TryGetXmlDocMemberResult.Some xmlDoc
 
-    with ex ->
-      sprintf
-        "An error occured when parsing the doc comment, please check that your doc comment is valid.\n\nMore info can be found LSP output"
+    | FSharpXmlDoc.FromXmlFile(dllFile, memberName) ->
+      match getXmlDoc dllFile with
+      | Some doc ->
+        match doc.TryGetValue memberName with
+        | true, docmember -> TryGetXmlDocMemberResult.Some docmember
+        | false, _ -> TryGetXmlDocMemberResult.None
+      | _ -> TryGetXmlDocMemberResult.None
 
-  | FSharpXmlDoc.FromXmlFile (dllFile, memberName) ->
-    match getXmlDoc dllFile with
-    | Some doc when doc.ContainsKey memberName ->
-      let typeDoc =
-        match typeDoc with
-        | Some s when doc.ContainsKey s ->
-          match formatStyle with
-          | FormatCommentStyle.Legacy -> doc.[s].ToString()
-          | FormatCommentStyle.SummaryOnly -> doc.[s].ToSummaryOnlyString()
-          | FormatCommentStyle.FullEnhanced -> doc.[s].ToFullEnhancedString()
-          | FormatCommentStyle.Documentation -> doc.[s].ToDocumentationString()
-        | _ -> ""
+    | FSharpXmlDoc.None -> TryGetXmlDocMemberResult.None
+  with ex ->
 
-      match formatStyle with
-      | FormatCommentStyle.Legacy -> doc.[memberName].ToString() + (if typeDoc <> "" then "\n\n" + typeDoc else "")
-      | FormatCommentStyle.SummaryOnly ->
-        doc.[memberName].ToSummaryOnlyString()
-        + (if typeDoc <> "" then "\n\n" + typeDoc else "")
-      | FormatCommentStyle.FullEnhanced ->
-        doc.[memberName].ToFullEnhancedString()
-        + (if typeDoc <> "" then "\n\n" + typeDoc else "")
-      | FormatCommentStyle.Documentation ->
-        doc.[memberName].ToDocumentationString()
-        + (if typeDoc <> "" then "\n\n" + typeDoc else "")
-    | _ -> ""
-  | _ -> ""
+    TryGetXmlDocMemberResult.Error
 
-let formatTaggedText (t: TaggedText) : string =
+[<Literal>]
+let private ERROR_WHILE_PARSING_DOC_COMMENT =
+  "An error occurred when parsing the doc comment, please check that your doc comment is valid.\n\nMore info can be found in the LSP output"
+
+let private formatTaggedText (t: TaggedText) : string =
   match t.Tag with
   | TextTag.ActivePatternResult
   | TextTag.UnionCase
@@ -985,8 +1057,8 @@ let formatTaggedText (t: TaggedText) : string =
   | TextTag.StringLiteral
   | TextTag.Text
   | TextTag.Punctuation
-  | TextTag.UnknownType
-  | TextTag.UnknownEntity -> t.Text
+  | TextTag.UnknownType -> t.Text
+  | TextTag.UnknownEntity
   | TextTag.Enum
   | TextTag.Event
   | TextTag.ActivePatternCase
@@ -998,13 +1070,14 @@ let formatTaggedText (t: TaggedText) : string =
   | TextTag.Record
   | TextTag.TypeParameter -> $"`{t.Text}`"
 
-let formatUntaggedText (t: TaggedText) = t.Text
+let private formatUntaggedText (t: TaggedText) = t.Text
 
-let formatUntaggedTexts = Array.map formatUntaggedText >> String.concat ""
+let private formatUntaggedTexts = Array.map formatUntaggedText >> String.concat ""
 
-let formatTaggedTexts = Array.map formatTaggedText >> String.concat ""
+let private formatTaggedTexts =
+  Array.map formatTaggedText >> String.concat "" >> (fun s -> s.Replace("``", ""))
 
-let formatGenericParameters (typeMappings: TaggedText[] list) =
+let private formatGenericParameters (typeMappings: TaggedText[] list) =
   typeMappings
   |> List.map (fun typeMap -> $"* {formatTaggedTexts typeMap}")
   |> String.concat nl
@@ -1018,12 +1091,17 @@ let formatCompletionItemTip (ToolTipText tips) : (string * string) =
       let makeTooltip (tipElement: ToolTipElementData) =
         let header = formatUntaggedTexts tipElement.MainDescription
 
-        let body = buildFormatComment tipElement.XmlDoc FormatCommentStyle.Legacy None
+        let body =
+          match tryGetXmlDocMember tipElement.XmlDoc with
+          | TryGetXmlDocMemberResult.Some xmlDoc -> xmlDoc.FormatComment(FormatCommentStyle.Legacy)
+          | TryGetXmlDocMemberResult.None -> ""
+          | TryGetXmlDocMemberResult.Error -> ERROR_WHILE_PARSING_DOC_COMMENT
+
         header, body
 
       items |> List.tryHead |> Option.map makeTooltip
 
-    | ToolTipElement.CompositionError (error) -> Some("<Note>", error)
+    | ToolTipElement.CompositionError(error) -> Some("<Note>", error)
     | _ -> Some("<Note>", "No signature data"))
 
 /// Formats a tooltip signature for output as a signatureHelp,
@@ -1034,10 +1112,129 @@ let formatPlainTip (ToolTipText tips) : (string * string) =
     | ToolTipElement.Group items ->
       let t = items |> Seq.head
       let signature = formatUntaggedTexts t.MainDescription
-      let description = buildFormatComment t.XmlDoc FormatCommentStyle.Legacy None
+
+      let description =
+        match tryGetXmlDocMember t.XmlDoc with
+        | TryGetXmlDocMemberResult.Some xmlDoc -> xmlDoc.FormatComment(FormatCommentStyle.Legacy)
+        | TryGetXmlDocMemberResult.None -> ""
+        | TryGetXmlDocMemberResult.Error -> ERROR_WHILE_PARSING_DOC_COMMENT
+
       Some(signature, description)
-    | ToolTipElement.CompositionError (error) -> Some("<Note>", error)
+    | ToolTipElement.CompositionError(error) -> Some("<Note>", error)
     | _ -> Some("<Note>", "No signature data"))
+
+
+let prepareSignature (signatureText: string) =
+  signatureText.Split Environment.NewLine
+  // Remove empty lines
+  |> Array.filter (not << String.IsNullOrWhiteSpace)
+  |> String.concat nl
+
+let prepareFooterLines (footerText: string) =
+  footerText.Split Environment.NewLine
+  // Remove empty lines
+  |> Array.filter (not << String.IsNullOrWhiteSpace)
+  // Mark each line as an individual string in italics
+  |> Array.map (fun n -> "*" + n + "*")
+
+
+let private tryComputeTooltipInfo (ToolTipText tips) (formatCommentStyle: FormatCommentStyle) =
+
+  // Note: In the previous code, we were returning a `(string * string * string) list list`
+  // but always discarding the tooltip later if the list had more than one element
+  // and only using the first element of the inner list.
+  // More over, I don't know in which case we can have several elements in the
+  // `(ToolTipText tips)` parameter.
+  // So I can't test why we have list of list stuff, but like I said, we were
+  // discarding the tooltip if it had more than one element.
+  //
+  // The new code should do the same thing, as before but instead of
+  // computing the rendered tooltip, and discarding some of them afterwards,
+  // we are discarding the things we don't want earlier and only compute the
+  // tooltip we want to display if we have the right data.
+
+  let computeGenericParametersText (tooltipData: ToolTipElementData) =
+    // If there are no generic parameters, don't display the section
+    if tooltipData.TypeMapping.IsEmpty then
+      None
+    // If there are generic parameters, display the section
+    else
+      "**Generic Parameters**"
+      + nl
+      + nl
+      + formatGenericParameters tooltipData.TypeMapping
+      |> Some
+
+  tips
+  // Render the first valid tooltip and return it
+  |> List.tryPick (function
+    | ToolTipElement.Group(tooltipData :: _) ->
+      let docComment, hasTruncatedExamples =
+        match tryGetXmlDocMember tooltipData.XmlDoc with
+        | TryGetXmlDocMemberResult.Some xmlDoc ->
+          // Format the doc comment
+          let docCommentText = xmlDoc.FormatComment formatCommentStyle
+
+          // Concatenate the doc comment and the generic parameters section
+          let consolidatedDocCommentText =
+            match computeGenericParametersText tooltipData with
+            | Some genericParametersText -> docCommentText + nl + nl + genericParametersText
+            | None -> docCommentText
+
+          consolidatedDocCommentText, xmlDoc.HasTruncatedExamples
+
+        | TryGetXmlDocMemberResult.None ->
+          // Even if a symbol doesn't have a doc comment, it can still have generic parameters
+          let docComment =
+            match computeGenericParametersText tooltipData with
+            | Some genericParametersText -> genericParametersText
+            | None -> ""
+
+          docComment, false
+        | TryGetXmlDocMemberResult.Error -> ERROR_WHILE_PARSING_DOC_COMMENT, false
+
+      {| DocComment = docComment
+         HasTruncatedExamples = hasTruncatedExamples |}
+      |> Ok
+      |> Some
+
+    | ToolTipElement.CompositionError error -> error |> Error |> Some
+
+    | ToolTipElement.Group []
+    | ToolTipElement.None -> None)
+
+/// <summary>
+/// Try format the given tooltip with the requested style.
+/// </summary>
+/// <param name="toolTipText">Tooltip documentation to render in the middle</param>
+/// <param name="formatCommentStyle">Style of tooltip</param>
+/// <returns>
+/// - <c>TipFormatterResult.Success {| DocComment; HasTruncatedExamples |}</c> if the doc comment has been formatted
+///
+///   Where DocComment is the format tooltip and HasTruncatedExamples is true if examples have been truncated
+///
+/// - <c>TipFormatterResult.None</c> if the doc comment has not been found
+/// - <c>TipFormatterResult.Error string</c> if an error occurred while parsing the doc comment
+/// </returns>
+let tryFormatTipEnhanced toolTipText (formatCommentStyle: FormatCommentStyle) =
+
+  match tryComputeTooltipInfo toolTipText formatCommentStyle with
+  | Some(Ok tooltipResult) -> TipFormatterResult.Success tooltipResult
+
+  | Some(Error error) -> TipFormatterResult.Error error
+
+  | None -> TipFormatterResult.None
+
+let private buildFormatComment cmt (formatStyle: FormatCommentStyle) (typeDoc: string option) =
+    match tryGetXmlDocMember cmt with
+    | TryGetXmlDocMemberResult.Some xmlDoc ->
+        match formatStyle with
+        | FormatCommentStyle.Legacy -> xmlDoc.ToString()
+        | FormatCommentStyle.SummaryOnly -> xmlDoc.ToSummaryOnlyString()
+        | FormatCommentStyle.FullEnhanced -> xmlDoc.ToFullEnhancedString()
+        | FormatCommentStyle.Documentation -> xmlDoc.ToDocumentationString()
+    | TryGetXmlDocMemberResult.None -> ""
+    | TryGetXmlDocMemberResult.Error -> ""
 
 let formatTipEnhanced
   (ToolTipText tips)
@@ -1069,45 +1266,87 @@ let formatTipEnhanced
     | ToolTipElement.CompositionError (error) -> Some [ ("<Note>", error, "") ]
     | _ -> None)
 
-let formatDocumentation
-  (ToolTipText tips)
-  ((signature, (constructors, fields, functions, interfaces, attrs, ts)): string * (string[] * string[] * string[] * string[] * string[] * string[]))
-  (footer: string)
-  (cn: string)
-  =
-  tips
-  |> List.choose (function
-    | ToolTipElement.Group items ->
-      Some(
-        items
-        |> List.map (fun i ->
-          let comment =
-            if i.TypeMapping.IsEmpty then
-              buildFormatComment i.XmlDoc FormatCommentStyle.Documentation None
-            else
-              buildFormatComment i.XmlDoc FormatCommentStyle.Documentation None
-              + nl
-              + nl
-              + "**Generic Parameters**"
-              + nl
-              + nl
-              + formatGenericParameters i.TypeMapping
+/// <summary>
+/// Generate the 'Show documentation' link for the tooltip.
+///
+/// The link is rendered differently depending on if examples
+/// have been truncated or not.
+/// </summary>
+/// <param name="hasTruncatedExamples"><c>true</c> if the examples have been truncated</param>
+/// <param name="xmlDocSig">XmlDocSignature in the format of <c>T:System.String.concat</c></param>
+/// <param name="assemblyName">Assembly name, example <c>FSharp.Core</c></param>
+/// <returns>Returns a string which represent the show documentation link</returns>
+let renderShowDocumentationLink (hasTruncatedExamples: bool) (xmlDocSig: string) (assemblyName: string) =
 
-          (signature, constructors, fields, functions, interfaces, attrs, ts, comment, footer, cn))
-      )
-    | ToolTipElement.CompositionError (error) -> Some [ ("<Note>", [||], [||], [||], [||], [||], [||], error, "", "") ]
-    | _ -> None)
+  // TODO: Refactor this code, to avoid duplicate with DocumentationFormatter.fs
+  let content =
+    Uri.EscapeDataString(sprintf """[{ "XmlDocSig": "%s", "AssemblyName": "%s" }]""" xmlDocSig assemblyName)
 
-let formatDocumentationFromXmlSig
-  (xmlSig: string)
-  (assembly: string)
-  ((signature, (constructors, fields, functions, interfaces, attrs, ts)): string * (string[] * string[] * string[] * string[] * string[] * string[]))
-  (footer: string)
-  (cn: string)
-  =
+  let text =
+    if hasTruncatedExamples then
+      "Open the documentation to see the truncated examples"
+    else
+      "Open the documentation"
+
+  $"<a href='command:fsharp.showDocumentation?%s{content}'>%s{text}</a>"
+
+/// <summary>
+/// Try format the given tooltip as documentation.
+/// </summary>
+/// <param name="toolTipText">Tooltip to format</param>
+/// <returns>
+/// - <c>TipFormatterResult.Success string</c> if the doc comment has been formatted
+/// - <c>TipFormatterResult.None</c> if the doc comment has not been found
+/// - <c>TipFormatterResult.Error string</c> if an error occurred while parsing the doc comment
+/// </returns>
+let tryFormatDocumentationFromTooltip toolTipText =
+
+  match tryComputeTooltipInfo toolTipText FormatCommentStyle.Documentation with
+  | Some(Ok tooltipResult) -> TipFormatterResult.Success tooltipResult.DocComment
+
+  | Some(Error error) -> TipFormatterResult.Error error
+
+  | None -> TipFormatterResult.None
+
+/// <summary>
+/// Try format the doc comment based on the XmlSignature and the assembly name.
+/// </summary>
+/// <param name="xmlSig">
+/// XmlSignature used to identify the doc comment to format
+///
+/// Example: <c>T:System.String.concat</c>
+/// </param>
+/// <param name="assembly">
+/// Assembly name used to identify the doc comment to format
+///
+/// Example: <c>FSharp.Core</c>
+/// </param>
+/// <returns>
+/// - <c>TipFormatterResult.Success string</c> if the doc comment has been formatted
+/// - <c>TipFormatterResult.None</c> if the doc comment has not been found
+/// - <c>TipFormatterResult.Error string</c> if an error occurred while parsing the doc comment
+/// </returns>
+let tryFormatDocumentationFromXmlSig (xmlSig: string) (assembly: string) =
   let xmlDoc = FSharpXmlDoc.FromXmlFile(assembly, xmlSig)
-  let comment = buildFormatComment xmlDoc FormatCommentStyle.Documentation None
-  [ [ (signature, constructors, fields, functions, interfaces, attrs, ts, comment, footer, cn) ] ]
+
+  match tryGetXmlDocMember xmlDoc with
+  | TryGetXmlDocMemberResult.Some xmlDoc ->
+    let formattedComment = xmlDoc.FormatComment(FormatCommentStyle.Documentation)
+
+    TipFormatterResult.Success formattedComment
+
+  | TryGetXmlDocMemberResult.None -> TipFormatterResult.None
+  | TryGetXmlDocMemberResult.Error -> TipFormatterResult.Error ERROR_WHILE_PARSING_DOC_COMMENT
+
+let formatDocumentationFromXmlDoc xmlDoc =
+  match tryGetXmlDocMember xmlDoc with
+  | TryGetXmlDocMemberResult.Some xmlDoc ->
+    let formattedComment = xmlDoc.FormatComment(FormatCommentStyle.Documentation)
+
+    TipFormatterResult.Success formattedComment
+
+  | TryGetXmlDocMemberResult.None -> TipFormatterResult.None
+  | TryGetXmlDocMemberResult.Error -> TipFormatterResult.Error ERROR_WHILE_PARSING_DOC_COMMENT
 
 let extractSignature (ToolTipText tips) =
   let getSignature (t: TaggedText[]) =

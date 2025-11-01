@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.DotNet.Interactive.FSharp.Tests
@@ -69,8 +69,8 @@ type KernelTests() =
                 "let a = 10"
             ]
 
-        /// val a : int
-        texts.Should().Contain(@"val a : int", null)
+        /// val a: int
+        texts.Should().Contain(@"val a: int", null)
         
     [<Fact>]
     member __.``HoverText for Keywords``() =
@@ -116,8 +116,8 @@ type KernelTests() =
                 "    printfn \"%A\" a"
             ]
 
-        // val a : float
-        texts.Should().Contain(@"val a : float", null)
+        // val a: float
+        texts.Should().Contain(@"val a: float", null)
         
         
     [<Fact>]
