@@ -8,6 +8,16 @@ open System.Collections.Concurrent
 open System
 open FSharp.Compiler.CodeAnalysis
 open FSharp.Compiler.Symbols
+open System.Runtime.CompilerServices
+open System.Globalization
+
+
+/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+let dispose (d: #IDisposable) = d.Dispose()
+
+/// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources asynchronously.</summary>
+/// <returns>A task that represents the asynchronous dispose operation.</returns>
+let disposeAsync (d: #IAsyncDisposable) = d.DisposeAsync()
 
 module internal Map =
   /// Combine two maps of identical types by starting with the first map and overlaying the second one.
@@ -15,7 +25,7 @@ module internal Map =
   let merge (first: Map<'a, 'b>) (second: Map<'a, 'b>) =
     let mutable result = first
 
-    for (KeyValue (key, value)) in second do
+    for (KeyValue(key, value)) in second do
       result <- Map.add key value result
 
     result
@@ -24,7 +34,7 @@ module internal Map =
   let combineTakeFirst (first: Map<_, _>) (second: Map<_, _>) =
     let mutable result = first
 
-    for (KeyValue (key, value)) in second do
+    for (KeyValue(key, value)) in second do
       if result.ContainsKey key then
         ()
       else
@@ -34,7 +44,7 @@ module internal Map =
 
   let values (m: Map<_, _>) =
     seq {
-      for (KeyValue (_, value)) in m do
+      for (KeyValue(_, value)) in m do
         yield value
     }
 
@@ -52,9 +62,12 @@ module Seq =
     }
 
 module ProcessHelper =
+
   let WaitForExitAsync (p: Process) =
     async {
-      let tcs = TaskCompletionSource<obj>()
+      let tcs =
+        TaskCompletionSource<obj>(TaskCreationOptions.RunContinuationsAsynchronously)
+
       p.EnableRaisingEvents <- true
       p.Exited.Add(fun _args -> tcs.TrySetResult(null) |> ignore)
 
@@ -65,8 +78,6 @@ module ProcessHelper =
       let! _ = tcs.Task |> Async.AwaitTask
       ()
     }
-
-
 
 type ResultOrString<'a> = Result<'a, string>
 
@@ -98,32 +109,35 @@ type Document =
     GetLineText0: int -> string
     GetLineText1: int -> string }
 
+
 /// <summary>
 /// Checks if the file ends with `.fsx` `.fsscript` or `.sketchfs`
 /// </summary>
-let isAScript (fileName: string) =
-  let ext = Path.GetExtension(fileName)
-
-  [ ".fsx"; ".fsscript"; ".sketchfs" ] |> List.exists ((=) ext)
+let inline isAScript (fileName: ReadOnlySpan<char>) =
+  fileName.EndsWith ".fsx"
+  || fileName.EndsWith ".fsscript"
+  || fileName.EndsWith ".sketchfs"
 
 /// <summary>
 /// Checks if the file ends with `.fsi`
 /// </summary>
-let isSignatureFile (fileName: string) = fileName.EndsWith ".fsi"
+let inline isSignatureFile (fileName: ReadOnlySpan<char>) = fileName.EndsWith ".fsi"
+let inline isSignatureFileStr (fileName: string) = fileName.EndsWith ".fsi"
 
 /// <summary>
 /// Checks if the file ends with `.fs`
 /// </summary>
-let isFsharpFile (fileName: string) = fileName.EndsWith ".fs"
+let isFsharpFile (fileName: ReadOnlySpan<char>) = fileName.EndsWith ".fs"
+
+let inline internal isFileWithFSharpI fileName = isAScript fileName || isSignatureFile fileName || isFsharpFile fileName
+
 
 /// <summary>
 /// This is a combination of `isAScript`, `isSignatureFile`, and `isFsharpFile`
 /// </summary>
 /// <param name="fileName"></param>
 /// <returns></returns>
-let isFileWithFSharp fileName =
-  [ isAScript; isSignatureFile; isFsharpFile ]
-  |> List.exists (fun f -> f fileName)
+let inline isFileWithFSharp (fileName: string) = isFileWithFSharpI (fileName.AsSpan())
 
 let normalizePath (file: string) : string =
   if isFileWithFSharp file then
@@ -132,8 +146,7 @@ let normalizePath (file: string) : string =
   else
     file
 
-let inline combinePaths path1 (path2: string) =
-  Path.Combine(path1, path2.TrimStart [| '\\'; '/' |])
+let inline combinePaths path1 (path2: string) = Path.Combine(path1, path2.TrimStart [| '\\'; '/' |])
 
 let inline (</>) path1 path2 = combinePaths path1 path2
 
@@ -144,7 +157,9 @@ let projectOptionsToParseOptions (checkOptions: FSharpProjectOptions) =
     | [||] -> checkOptions.OtherOptions |> Array.where (isFileWithFSharp)
     | x -> x
 
-  { FSharpParsingOptions.Default with SourceFiles = files }
+  { FSharpParsingOptions.Default with
+      SourceFiles = files }
+
 
 [<RequireQualifiedAccess>]
 module Option =
@@ -170,9 +185,13 @@ module Result =
     | Some x -> Ok x
     | None -> Error(recover ())
 
+  let inline ofVOption recover o =
+    match o with
+    | ValueSome x -> Ok x
+    | ValueNone -> Error(recover ())
+
   /// ensure the condition is true before continuing
-  let inline guard condition errorValue =
-    if condition () then Ok() else Error errorValue
+  let inline guard condition errorValue = if condition () then Ok() else Error errorValue
 
 [<RequireQualifiedAccess>]
 module Async =
@@ -205,6 +224,14 @@ module Async =
       // Start the workflow using a provided cancellation token
       Async.StartWithContinuations(work, cont, econt, ccont, cancellationToken = cancellationToken))
 
+  /// <summary>Creates an asynchronous computation that executes all the given asynchronous computations, using 75% of the Environment.ProcessorCount</summary>
+  /// <param name="computations">A sequence of distinct computations to be parallelized.</param>
+  let parallel75 computations =
+    let maxConcurrency =
+      Math.Max(1.0, Math.Floor((float System.Environment.ProcessorCount) * 0.75))
+
+    Async.Parallel(computations, int maxConcurrency)
+
   [<RequireQualifiedAccess>]
   module Array =
     /// Async implementation of Array.map.
@@ -225,141 +252,6 @@ module Async =
 module AsyncResult =
   let inline bimap okF errF r = Async.map (Result.bimap okF errF) r
   let inline ofOption recover o = Async.map (Result.ofOption recover) o
-
-// Maybe computation expression builder, copied from ExtCore library
-/// https://github.com/jack-pappas/ExtCore/blob/master/ExtCore/Control.fs
-[<Sealed>]
-type MaybeBuilder() =
-  // 'T -> M<'T>
-  [<DebuggerStepThrough>]
-  member inline __.Return value : 'T option = Some value
-
-  // M<'T> -> M<'T>
-  [<DebuggerStepThrough>]
-  member inline __.ReturnFrom value : 'T option = value
-
-  // unit -> M<'T>
-  [<DebuggerStepThrough>]
-  member inline __.Zero() : unit option = Some() // TODO: Should this be None?
-
-  // (unit -> M<'T>) -> M<'T>
-  [<DebuggerStepThrough>]
-  member __.Delay(f: unit -> 'T option) : 'T option = f ()
-
-  // M<'T> -> M<'T> -> M<'T>
-  // or
-  // M<unit> -> M<'T> -> M<'T>
-  [<DebuggerStepThrough>]
-  member inline __.Combine(r1, r2: 'T option) : 'T option =
-    match r1 with
-    | None -> None
-    | Some () -> r2
-
-  // M<'T> * ('T -> M<'U>) -> M<'U>
-  [<DebuggerStepThrough>]
-  member inline __.Bind(value, f: 'T -> 'U option) : 'U option = Option.bind f value
-
-  // 'T * ('T -> M<'U>) -> M<'U> when 'U :> IDisposable
-  [<DebuggerStepThrough>]
-  member __.Using(resource: ('T :> IDisposable), body: _ -> _ option) : _ option =
-    try
-      body resource
-    finally
-      if not <| obj.ReferenceEquals(null, box resource) then
-        resource.Dispose()
-
-  // (unit -> bool) * M<'T> -> M<'T>
-  [<DebuggerStepThrough>]
-  member x.While(guard, body: _ option) : _ option =
-    if guard () then
-      // OPTIMIZE: This could be simplified so we don't need to make calls to Bind and While.
-      x.Bind(body, (fun () -> x.While(guard, body)))
-    else
-      x.Zero()
-
-  // seq<'T> * ('T -> M<'U>) -> M<'U>
-  // or
-  // seq<'T> * ('T -> M<'U>) -> seq<M<'U>>
-  [<DebuggerStepThrough>]
-  member x.For(sequence: seq<_>, body: 'T -> unit option) : _ option =
-    // OPTIMIZE: This could be simplified so we don't need to make calls to Using, While, Delay.
-    x.Using(sequence.GetEnumerator(), (fun enum -> x.While(enum.MoveNext, x.Delay(fun () -> body enum.Current))))
-
-[<Sealed>]
-type AsyncMaybeBuilder() =
-  [<DebuggerStepThrough>]
-  member __.Return value : Async<'T option> = Some value |> async.Return
-
-  [<DebuggerStepThrough>]
-  member __.ReturnFrom value : Async<'T option> = value
-
-  [<DebuggerStepThrough>]
-  member __.ReturnFrom(value: 'T option) : Async<'T option> = async.Return value
-
-  [<DebuggerStepThrough>]
-  member __.Zero() : Async<unit option> = Some() |> async.Return
-
-  [<DebuggerStepThrough>]
-  member __.Delay(f: unit -> Async<'T option>) : Async<'T option> = f ()
-
-  [<DebuggerStepThrough>]
-  member __.Combine(r1, r2: Async<'T option>) : Async<'T option> =
-    async {
-      let! r1' = r1
-
-      match r1' with
-      | None -> return None
-      | Some () -> return! r2
-    }
-
-  [<DebuggerStepThrough>]
-  member __.Bind(value: Async<'T option>, f: 'T -> Async<'U option>) : Async<'U option> =
-    async {
-      let! value' = value
-
-      match value' with
-      | None -> return None
-      | Some result -> return! f result
-    }
-
-  [<DebuggerStepThrough>]
-  member __.Bind(value: 'T option, f: 'T -> Async<'U option>) : Async<'U option> =
-    async {
-      match value with
-      | None -> return None
-      | Some result -> return! f result
-    }
-
-  [<DebuggerStepThrough>]
-  member __.Using(resource: ('T :> IDisposable), body: _ -> Async<_ option>) : Async<_ option> =
-    try
-      body resource
-    finally
-      if not << isNull <| resource then
-        resource.Dispose()
-
-  [<DebuggerStepThrough>]
-  member x.While(guard, body: Async<_ option>) : Async<_ option> =
-    if guard () then
-      x.Bind(body, (fun () -> x.While(guard, body)))
-    else
-      x.Zero()
-
-  [<DebuggerStepThrough>]
-  member x.For(sequence: seq<_>, body: 'T -> Async<unit option>) : Async<_ option> =
-    x.Using(sequence.GetEnumerator(), (fun enum -> x.While(enum.MoveNext, x.Delay(fun () -> body enum.Current))))
-
-  [<DebuggerStepThrough>]
-  member inline __.TryWith(computation: Async<'T option>, catchHandler: exn -> Async<'T option>) : Async<'T option> =
-    async.TryWith(computation, catchHandler)
-
-  [<DebuggerStepThrough>]
-  member inline __.TryFinally(computation: Async<'T option>, compensation: unit -> unit) : Async<'T option> =
-    async.TryFinally(computation, compensation)
-
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module AsyncMaybe =
-  let inline liftAsync (async: Async<'T>) : Async<_ option> = async |> Async.map Some
 
 
 [<RequireQualifiedAccess>]
@@ -449,8 +341,7 @@ module Array =
   let startsWith (prefix: _[]) (whole: _[]) = isSubArray prefix whole 0
 
   /// Returns true if one array has trailing elements equal to another's.
-  let endsWith (suffix: _[]) (whole: _[]) =
-    isSubArray suffix whole (whole.Length - suffix.Length)
+  let endsWith (suffix: _[]) (whole: _[]) = isSubArray suffix whole (whole.Length - suffix.Length)
 
   /// Returns a new array with an element replaced with a given value.
   let replace index value (array: _[]) =
@@ -470,13 +361,13 @@ module Array =
     if areEqual array [||] then
       ()
     else
-      let arrlen, revlen = array.Length - 1, array.Length / 2 - 1
+      let arrLen, revLen = array.Length - 1, array.Length / 2 - 1
 
-      for idx in 0..revlen do
+      for idx in 0..revLen do
         let t1 = array.[idx]
-        let t2 = array.[arrlen - idx]
+        let t2 = array.[arrLen - idx]
         array.[idx] <- t2
-        array.[arrlen - idx] <- t1
+        array.[arrLen - idx] <- t1
 
   let splitAt (n: int) (xs: 'a[]) : 'a[] * 'a[] =
     match xs with
@@ -499,15 +390,20 @@ module Array =
 module List =
 
   ///Returns the greatest of all elements in the list that is less than the threshold
-  let maxUnderThreshold nmax =
-    List.maxBy (fun n -> if n > nmax then 0 else n)
+  let maxUnderThreshold nmax = List.maxBy (fun n -> if n > nmax then 0 else n)
 
-
-
+  /// Groups a tupled list by the first item to produce a list of values
+  let groupByFst (tupledItems: ('Key * 'Value) list) =
+    tupledItems
+    |> List.groupBy (fst)
+    |> List.map (fun (key, list) -> key, list |> List.map snd)
 
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module String =
+  /// Concatenates all the elements of a string array, using the specified separator between each element.
+  let inline join (separator: string) (items: string seq) = String.Join(separator, items)
+
   let inline toCharArray (str: string) = str.ToCharArray()
 
   let lowerCaseFirstChar (str: string) =
@@ -539,9 +435,12 @@ module String =
 
 
   let (|StartsWith|_|) (pattern: string) (value: string) =
-    if String.IsNullOrWhiteSpace value then None
-    elif value.StartsWith pattern then Some()
-    else None
+    if String.IsNullOrWhiteSpace value then
+      None
+    elif value.StartsWith(pattern, StringComparison.Ordinal) then
+      Some()
+    else
+      None
 
   let split (splitter: char) (s: string) =
     s.Split([| splitter |], StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
@@ -555,7 +454,7 @@ module String =
          yield line.Value
          line.Value <- reader.ReadLine()
 
-       if str.EndsWith("\n") then
+       if str.EndsWith("\n", StringComparison.Ordinal) then
          // last trailing space not returned
          // http://stackoverflow.com/questions/19365404/stringreader-omits-trailing-linebreak
          yield String.Empty |]
@@ -568,6 +467,72 @@ module String =
     match s.IndexOf splitter with
     | -1 -> NoMatch
     | n -> Split(s.[0 .. n - 1], s.Substring(n + 1))
+
+[<Extension>]
+type ReadOnlySpanExtensions =
+  /// Note: empty string -> 1 line
+  [<Extension>]
+  static member CountLines(text: ReadOnlySpan<char>) =
+    let mutable count = 0
+
+    for _ in text.EnumerateLines() do
+      count <- count + 1
+
+    count
+
+  [<Extension>]
+  static member LastLine(text: ReadOnlySpan<char>) =
+    let mutable line = ReadOnlySpan.Empty
+
+    for current in text.EnumerateLines() do
+      line <- current
+
+    line
+
+#if !NET7_0_OR_GREATER
+  [<Extension>]
+  static member IndexOfAnyExcept(span: ReadOnlySpan<char>, value0: char, value1: char) =
+    let mutable i = 0
+    let mutable found = false
+
+    while not found && i < span.Length do
+      let c = span[i]
+
+      if c <> value0 && c <> value1 then
+        found <- true
+      else
+        i <- i + 1
+
+    if found then i else -1
+
+  [<Extension>]
+  static member IndexOfAnyExcept(span: ReadOnlySpan<char>, values: ReadOnlySpan<char>) =
+    let mutable i = 0
+    let mutable found = false
+
+    while not found && i < span.Length do
+      if values.IndexOf span[i] < 0 then
+        found <- true
+      else
+        i <- i + 1
+
+    if found then i else -1
+
+  [<Extension>]
+  static member LastIndexOfAnyExcept(span: ReadOnlySpan<char>, value0: char, value1: char) =
+    let mutable i = span.Length - 1
+    let mutable found = false
+
+    while not found && i >= 0 do
+      let c = span[i]
+
+      if c <> value0 && c <> value1 then
+        found <- true
+      else
+        i <- i - 1
+
+    if found then i else -1
+#endif
 
 type ConcurrentDictionary<'key, 'value> with
 
@@ -676,27 +641,23 @@ type Path with
 
 let inline debug msg = Printf.kprintf Debug.WriteLine msg
 let inline fail msg = Printf.kprintf Debug.Fail msg
-let asyncMaybe = AsyncMaybeBuilder()
-let maybe = MaybeBuilder()
 
 
 let chooseByPrefix (prefix: string) (s: string) =
-  if s.StartsWith(prefix) then
+  if s.StartsWith(prefix, StringComparison.Ordinal) then
     Some(s.Substring(prefix.Length))
   else
     None
 
-let chooseByPrefix2 prefixes (s: string) =
-  prefixes |> List.tryPick (fun prefix -> chooseByPrefix prefix s)
+let chooseByPrefix2 prefixes (s: string) = prefixes |> List.tryPick (fun prefix -> chooseByPrefix prefix s)
 
 let splitByPrefix (prefix: string) (s: string) =
-  if s.StartsWith(prefix) then
+  if s.StartsWith(prefix, StringComparison.Ordinal) then
     Some(prefix, s.Substring(prefix.Length))
   else
     None
 
-let splitByPrefix2 prefixes (s: string) =
-  prefixes |> List.tryPick (fun prefix -> splitByPrefix prefix s)
+let splitByPrefix2 prefixes (s: string) = prefixes |> List.tryPick (fun prefix -> splitByPrefix prefix s)
 
 [<AutoOpen>]
 module Patterns =
@@ -704,7 +665,7 @@ module Patterns =
   let (|StartsWith|_|) (pat: string) (str: string) =
     match str with
     | null -> None
-    | _ when str.StartsWith pat -> Some str
+    | _ when str.StartsWith(pat, StringComparison.Ordinal) -> Some str
     | _ -> None
 
   let (|Contains|_|) (pat: string) (str: string) =
@@ -722,7 +683,7 @@ module Version =
 
   let private informationalVersion () =
     let assemblies =
-      typeof<VersionInfo>.Assembly.GetCustomAttributes (typeof<AssemblyInformationalVersionAttribute>, true)
+      typeof<VersionInfo>.Assembly.GetCustomAttributes(typeof<AssemblyInformationalVersionAttribute>, true)
 
     match assemblies with
     | [| x |] ->
@@ -750,21 +711,20 @@ module Version =
 type Debounce<'a>(timeout, fn) as x =
 
   let mailbox =
-    MailboxProcessor<'a>.Start
-      (fun agent ->
-        let rec loop ida idb arg =
-          async {
-            let! r = agent.TryReceive(x.Timeout)
+    MailboxProcessor<'a>.Start(fun agent ->
+      let rec loop ida idb arg =
+        async {
+          let! r = agent.TryReceive(x.Timeout)
 
-            match r with
-            | Some arg -> return! loop ida (idb + 1) (Some arg)
-            | None when ida <> idb ->
-              do! fn arg.Value
-              return! loop 0 0 None
-            | None -> return! loop 0 0 arg
-          }
+          match r with
+          | Some arg -> return! loop ida (idb + 1) (Some arg)
+          | None when ida <> idb ->
+            do! fn arg.Value
+            return! loop 0 0 None
+          | None -> return! loop 0 0 arg
+        }
 
-        loop 0 0 None)
+      loop 0 0 None)
 
   /// Calls the function, after debouncing has been applied.
   member _.Bounce(arg) = mailbox.Post(arg)
@@ -773,8 +733,7 @@ type Debounce<'a>(timeout, fn) as x =
   member val Timeout = timeout with get, set
 
 module Indentation =
-  let inline get (line: string) =
-    line.Length - line.AsSpan().Trim(' ').Length
+  let inline get (line: string) = line.Length - line.AsSpan().Trim(' ').Length
 
 
 type FSharpSymbol with

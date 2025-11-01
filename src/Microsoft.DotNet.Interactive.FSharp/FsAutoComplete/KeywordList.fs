@@ -27,13 +27,19 @@ module KeywordList =
     |> dict
 
   let hashDirectives =
-    [ "r", "References an assembly"
-      "load", "Reads a source file, compiles it, and runs it."
+    [ "r", "References an assembly or a nuget: package"
+      "load", "References a source .fsx script or .fs file, by compiling and running it."
       "I", "Specifies an assembly search path in quotation marks."
       "light", "Enables or disables lightweight syntax, for compatibility with other versions of ML"
       "if", "Supports conditional compilation"
       "else", "Supports conditional compilation"
       "endif", "Supports conditional compilation"
       "nowarn", "Disables a compiler warning or warnings"
+      "warnon", "Enables a compiler warning or warnings"
+      "quit", "exits the interactive session"
+      "time", "toggles whether to display performance information"
       "line", "Indicates the original source code line" ]
     |> dict
+
+  let allKeywords: string list =
+    keywordDescriptions |> Seq.map ((|KeyValue|) >> fst) |> Seq.toList

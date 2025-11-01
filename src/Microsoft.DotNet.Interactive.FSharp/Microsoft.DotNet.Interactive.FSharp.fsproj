@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Compile Include="FsAutoComplete\Utils.fs" />
+    <Compile Include="FsAutoComplete\UntypedAstUtils.fs" />
     <Compile Include="FsAutoComplete\TypedAstUtils.fs" />
     <Compile Include="FsAutoComplete\TypedAstPatterns.fs" />
     <Compile Include="FsAutoComplete\Lexer.fs" />

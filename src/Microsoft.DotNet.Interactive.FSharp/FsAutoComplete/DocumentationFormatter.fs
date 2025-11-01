@@ -16,7 +16,22 @@ module DocumentationFormatter =
 
   let mutable lastDisplayContext: FSharpDisplayContext = FSharpDisplayContext.Empty
 
-  let emptyTypeTip = [||], [||], [||], [||], [||], [||]
+  type EntityInfo =
+    { Constructors: string array
+      Fields: string array
+      Functions: string array
+      Interfaces: string array
+      Attributes: string array
+      DeclaredTypes: string array }
+
+    static member Empty =
+
+      { Constructors = [||]
+        Fields = [||]
+        Functions = [||]
+        Interfaces = [||]
+        Attributes = [||]
+        DeclaredTypes = [||] }
 
   /// Concat two strings with a space between if both a and b are not IsNullOrWhiteSpace
   let internal (++) (a: string) (b: string) =
@@ -34,6 +49,8 @@ module DocumentationFormatter =
         Uri.EscapeDataString(sprintf """[{ "XmlDocSig": "%s", "AssemblyName": "%s" }]""" xmlDocSig assemblyName)
 
       $"<a href='command:fsharp.showDocumentation?%s{content}'>%s{name}</a>", name.Length
+
+  let tag = Regex """<.*>"""
 
   let rec formatType (displayContext: FSharpDisplayContext) (typ: FSharpType) : string * int =
     let combineParts (parts: (string * int) seq) : string * int =
@@ -86,23 +103,18 @@ module DocumentationFormatter =
       // we set this context specifically because we want to enforce prefix-generic form on tooltip displays
       let newContext = displayContext.WithPrefixGenericParameters()
       let org = typ.Format newContext
-      let t = Regex.Replace(org, """<.*>""", "<")
+      let t = tag.Replace(org, "<")
 
       [ yield formatShowDocumentationLink t xmlDocSig assemblyName
-        if t.EndsWith "<" then
+        if t.EndsWith("<", StringComparison.Ordinal) then
           yield! renderedGenericArgumentTypes |> Seq.intersperse (", ", 2)
 
           yield formatShowDocumentationLink ">" xmlDocSig assemblyName ]
       |> combineParts
 
     elif typ.IsGenericParameter then
-      // generic parameters are either ^ or ' prefixed, depending on if they are inline or not
-      let name =
-        (if typ.GenericParameter.IsSolveAtCompileTime then
-           "^"
-         else
-           "'")
-        + typ.GenericParameter.Name
+      let prefix = if typ.GenericParameter.IsSolveAtCompileTime then "^" else "'"
+      let name = prefix + typ.GenericParameter.Name
 
       formatShowDocumentationLink name xmlDocSig assemblyName
     else if typ.HasTypeDefinition then
@@ -119,8 +131,7 @@ module DocumentationFormatter =
 
   let formatGenericParameter includeMemberConstraintTypes displayContext (param: FSharpGenericParameter) =
 
-    let asGenericParamName (param: FSharpGenericParameter) =
-      (if param.IsSolveAtCompileTime then "^" else "'") + param.Name
+    let asGenericParamName (param: FSharpGenericParameter) = (if param.IsSolveAtCompileTime then "^" else "'") + param.Name
 
     let sb = StringBuilder()
 
@@ -128,7 +139,7 @@ module DocumentationFormatter =
       let memberConstraint (c: FSharpGenericParameterMemberConstraint) =
         let formattedMemberName, isProperty =
           match c.IsProperty, PrettyNaming.TryChopPropertyName c.MemberName with
-          | true, Some (chopped) when chopped <> c.MemberName -> chopped, true
+          | true, Some(chopped) when chopped <> c.MemberName -> chopped, true
           | _, _ ->
             if PrettyNaming.IsLogicalOpName c.MemberName then
               PrettyNaming.ConvertValLogicalNameToDisplayNameCore c.MemberName, false
@@ -159,11 +170,9 @@ module DocumentationFormatter =
         }
         |> String.concat ""
 
-      let typeConstraint (tc: FSharpType) =
-        sprintf ":> %s" (tc |> format displayContext |> fst)
+      let typeConstraint (tc: FSharpType) = sprintf ":> %s" (tc |> format displayContext |> fst)
 
-      let enumConstraint (ec: FSharpType) =
-        sprintf "enum<%s>" (ec |> format displayContext |> fst)
+      let enumConstraint (ec: FSharpType) = sprintf "enum<%s>" (ec |> format displayContext |> fst)
 
       let delegateConstraint (tc: FSharpGenericParameterDelegateConstraint) =
         sprintf
@@ -206,12 +215,12 @@ module DocumentationFormatter =
     with :? InvalidOperationException ->
       p.DisplayName, p.DisplayName.Length
 
-  let getUnioncaseSignature displayContext (unionCase: FSharpUnionCase) =
+  let getUnionCaseSignature displayContext (unionCase: FSharpUnionCase) =
     if unionCase.Fields.Count > 0 then
       let typeList =
         unionCase.Fields
         |> Seq.map (fun unionField ->
-          if unionField.Name.StartsWith "Item" then //TODO: Some better way of detecting default names for the union cases' fields
+          if unionField.Name.StartsWith("Item", StringComparison.Ordinal) then //TODO: Some better way of detecting default names for the union cases' fields
             unionField.FieldType |> format displayContext |> fst
 
           else
@@ -225,7 +234,7 @@ module DocumentationFormatter =
       unionCase.DisplayName
 
   let getFuncSignatureWithIdent displayContext (func: FSharpMemberOrFunctionOrValue) (ident: int) =
-    let maybeGetter = func.LogicalName.StartsWith "get_"
+    let maybeGetter = func.LogicalName.StartsWith("get_", StringComparison.Ordinal)
     let indent = String.replicate ident " "
 
     let functionName =
@@ -237,7 +246,7 @@ module DocumentationFormatter =
           |> FSharpKeywords.NormalizeIdentifierBackticks
         elif func.IsOperatorOrActivePattern then
           func.DisplayName
-        elif func.DisplayName.StartsWith "( " then
+        elif func.DisplayName.StartsWith("( ", StringComparison.Ordinal) then
           FSharpKeywords.NormalizeIdentifierBackticks func.LogicalName
         else
           FSharpKeywords.NormalizeIdentifierBackticks func.DisplayName
@@ -410,9 +419,12 @@ module DocumentationFormatter =
           "new"
         elif func.IsOperatorOrActivePattern then
           func.DisplayName
-        elif func.DisplayName.StartsWith "( " then
+        elif func.DisplayName.StartsWith("( ", StringComparison.Ordinal) then
           FSharpKeywords.NormalizeIdentifierBackticks func.LogicalName
-        elif func.LogicalName.StartsWith "get_" || func.LogicalName.StartsWith "set_" then
+        elif
+          func.LogicalName.StartsWith("get_", StringComparison.Ordinal)
+          || func.LogicalName.StartsWith("set_", StringComparison.Ordinal)
+        then
           PrettyNaming.TryChopPropertyName func.DisplayName
           |> Option.defaultValue func.DisplayName
         else
@@ -477,8 +489,7 @@ module DocumentationFormatter =
         with _ ->
           "Unknown"
 
-    let formatName (parameter: FSharpParameter) =
-      parameter.Name |> Option.defaultValue parameter.DisplayName
+    let formatName (parameter: FSharpParameter) = parameter.Name |> Option.defaultValue parameter.DisplayName
 
     let isDelegate =
       match func.EnclosingEntitySafe with
@@ -531,7 +542,7 @@ module DocumentationFormatter =
     let prefix = if v.IsMutable then "val mutable" else "val"
 
     let name =
-      (if v.DisplayName.StartsWith "( " then
+      (if v.DisplayName.StartsWith("( ", StringComparison.Ordinal) then
          v.LogicalName
        else
          v.DisplayName)
@@ -539,9 +550,9 @@ module DocumentationFormatter =
 
     let constraints =
       match v.FullTypeSafe with
-      | Some fulltype when fulltype.IsGenericParameter ->
+      | Some fullType when fullType.IsGenericParameter ->
         let formattedParam =
-          formatGenericParameter false displayContext fulltype.GenericParameter
+          formatGenericParameter false displayContext fullType.GenericParameter
 
         if String.IsNullOrWhiteSpace formattedParam then
           None
@@ -579,7 +590,7 @@ module DocumentationFormatter =
 
     sprintf "active pattern %s: %s" apc.Name findVal
 
-  let getAttributeSignature displayContext (attr: FSharpAttribute) =
+  let getAttributeSignature (attr: FSharpAttribute) =
     let name =
       formatShowDocumentationLink
         attr.AttributeType.DisplayName
@@ -610,7 +621,7 @@ module DocumentationFormatter =
       | _ when fse.IsInterface -> "interface"
       | _ -> "type"
 
-    let enumtip () =
+    let enumTip () =
       $" ={nl}  |"
       ++ (fse.FSharpFields
           |> Seq.filter (fun f -> not f.IsCompilerGenerated)
@@ -624,10 +635,10 @@ module DocumentationFormatter =
             | None -> field.Name)
           |> String.concat $"{nl}  | ")
 
-    let uniontip () =
+    let unionTip () =
       $" ={nl}  |"
       ++ (fse.UnionCases
-          |> Seq.map (getUnioncaseSignature displayContext)
+          |> Seq.map (getUnionCaseSignature displayContext)
           |> String.concat ($"{nl}  | "))
 
     let delegateTip () =
@@ -638,7 +649,7 @@ module DocumentationFormatter =
       $" ={nl}   delegate of{nl}{invokerSig}"
 
     let typeTip () =
-      let constrc =
+      let constructors =
         fse.MembersFunctionsAndValues
         |> Seq.filter (fun n -> n.IsConstructor && n.Accessibility.IsPublic)
         |> Seq.collect (fun f ->
@@ -709,25 +720,30 @@ module DocumentationFormatter =
         |> Seq.map (fun inf -> fst (format displayContext inf))
         |> Seq.toArray
 
-      let attrs =
-        fse.Attributes |> Seq.map (getAttributeSignature displayContext) |> Seq.toArray
+      let attrs = fse.Attributes |> Seq.map getAttributeSignature |> Seq.toArray
 
       let types =
         fse.NestedEntities
-        |> Seq.filter (fun ne ->
+        |> Seq.choose (fun ne ->
           let isCompilerGenerated =
             ne.Attributes
             |> Seq.tryFind (fun attribute -> attribute.AttributeType.CompiledName = "CompilerGeneratedAttribute")
             |> Option.isSome
 
-          not ne.IsNamespace && not isCompilerGenerated)
-        |> Seq.map (fun ne ->
-          (typeName ne)
-          ++ fst (formatShowDocumentationLink ne.DisplayName ne.XmlDocSig ne.Assembly.SimpleName))
+          if not ne.IsNamespace && not isCompilerGenerated then
+            (typeName ne)
+            ++ fst (formatShowDocumentationLink ne.DisplayName ne.XmlDocSig ne.Assembly.SimpleName)
+            |> Some
+          else
+            None)
         |> Seq.toArray
 
-
-      constrc, fields, funcs, interfaces, attrs, types
+      { Constructors = constructors
+        Fields = fields
+        Functions = funcs
+        Interfaces = interfaces
+        Attributes = attrs
+        DeclaredTypes = types }
 
     let typeDisplay =
       let name =
@@ -761,11 +777,11 @@ module DocumentationFormatter =
         basicName
 
     if fse.IsFSharpUnion then
-      (typeDisplay + uniontip ()), typeTip ()
+      (typeDisplay + unionTip ()), typeTip ()
     elif fse.IsEnum then
-      (typeDisplay + enumtip ()), emptyTypeTip
+      (typeDisplay + enumTip ()), EntityInfo.Empty
     elif fse.IsDelegate then
-      (typeDisplay + delegateTip ()), emptyTypeTip
+      (typeDisplay + delegateTip ()), EntityInfo.Empty
     else
       typeDisplay, typeTip ()
 
@@ -773,7 +789,10 @@ module DocumentationFormatter =
 
     /// trims the leading 'Microsoft.' from the full name of the symbol
     member m.SafeFullName =
-      if m.FullName.StartsWith "Microsoft." && m.Assembly.SimpleName = "FSharp.Core" then
+      if
+        m.FullName.StartsWith("Microsoft.", StringComparison.Ordinal)
+        && m.Assembly.SimpleName = "FSharp.Core"
+      then
         m.FullName.Substring "Microsoft.".Length
       else
         m.FullName
@@ -790,7 +809,7 @@ module DocumentationFormatter =
 
           sprintf "Full name: %s\nDeclaring Entity: %s\nAssembly: %s" m.SafeFullName link m.Assembly.SimpleName
 
-      | SymbolUse.Entity (c, _) ->
+      | SymbolUse.Entity(c, _) ->
         match c.DeclaringEntity with
         | None -> sprintf "Full name: %s\nAssembly: %s" c.SafeFullName c.Assembly.SimpleName
         | Some e ->
@@ -821,9 +840,9 @@ module DocumentationFormatter =
       match entity with
       | MemberFunctionOrValue m -> sprintf "Full name: %s\nAssembly: %s" m.SafeFullName m.Assembly.SimpleName
 
-      | EntityFromSymbol (c, _) -> sprintf "Full name: %s\nAssembly: %s" c.SafeFullName c.Assembly.SimpleName
+      | EntityFromSymbol(c, _) -> sprintf "Full name: %s\nAssembly: %s" c.SafeFullName c.Assembly.SimpleName
 
-      | Field (f, _) -> sprintf "Full name: %s\nAssembly: %s" f.SafeFullName f.Assembly.SimpleName
+      | Field(f, _) -> sprintf "Full name: %s\nAssembly: %s" f.SafeFullName f.Assembly.SimpleName
 
       | ActivePatternCase ap -> sprintf "Full name: %s\nAssembly: %s" ap.SafeFullName ap.Assembly.SimpleName
 
@@ -850,19 +869,19 @@ module DocumentationFormatter =
     lastDisplayContext <- symbol.DisplayContext
 
     match symbol with
-    | SymbolUse.TypeAbbreviation (fse) ->
+    | SymbolUse.TypeAbbreviation(fse) ->
       try
         let parent = fse.GetAbbreviatedParent()
 
         match parent with
-        | FSharpEntity (ent, _, _) ->
+        | FSharpEntity(ent, _, _) ->
           let signature = getEntitySignature symbol.DisplayContext ent
           Some(signature, footerForType' parent, cn)
         | _ -> None
       with _ ->
         None
 
-    | SymbolUse.Entity (fse, _) ->
+    | SymbolUse.Entity(fse, _) ->
       try
         let signature = getEntitySignature symbol.DisplayContext fse
         Some(signature, footerForType symbol, cn)
@@ -874,66 +893,60 @@ module DocumentationFormatter =
       | Some ent when ent.IsValueType || ent.IsEnum ->
         //ValueTypes
         let signature = getFuncSignature symbol.DisplayContext func
-        Some((signature, emptyTypeTip), footerForType symbol, cn)
+        Some((signature, EntityInfo.Empty), footerForType symbol, cn)
       | _ ->
         //ReferenceType constructor
         let signature = getFuncSignature symbol.DisplayContext func
-        Some((signature, emptyTypeTip), footerForType symbol, cn)
+        Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.Operator func ->
       let signature = getFuncSignature symbol.DisplayContext func
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.Pattern func ->
       //Active pattern or operator
       let signature = getFuncSignature symbol.DisplayContext func
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.Property prop ->
       let signature = getFuncSignature symbol.DisplayContext prop
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.ClosureOrNestedFunction func ->
       //represents a closure or nested function
       let signature = getFuncSignature symbol.DisplayContext func
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.Function func ->
       let signature = getFuncSignature symbol.DisplayContext func
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.Val func ->
       //val name : Type
       let signature = getValSignature symbol.DisplayContext func
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.Field fsf ->
       let signature = getFieldSignature symbol.DisplayContext fsf
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.UnionCase uc ->
-      let signature = getUnioncaseSignature symbol.DisplayContext uc
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      let signature = getUnionCaseSignature symbol.DisplayContext uc
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.ActivePatternCase apc ->
       let signature = getAPCaseSignature symbol.DisplayContext apc
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.ActivePattern ap ->
       let signature = getFuncSignature symbol.DisplayContext ap
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | SymbolUse.GenericParameter gp ->
       let signature =
-        sprintf
-          "%s (requires %s)"
-          (if gp.IsSolveAtCompileTime then
-             "^" + gp.Name
-           else
-             "'" + gp.Name)
-          (formatGenericParameter false symbol.DisplayContext gp)
+        $"'%s{gp.Name} (requires %s{formatGenericParameter false symbol.DisplayContext gp})"
 
-      Some((signature, emptyTypeTip), footerForType symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType symbol, cn)
 
     | _ -> None
 
@@ -943,7 +956,7 @@ module DocumentationFormatter =
     let cn = compiledNameType' symbol
 
     match symbol with
-    | EntityFromSymbol (fse, _) ->
+    | EntityFromSymbol(fse, _) ->
       try
         let signature = getEntitySignature lastDisplayContext fse
         Some(signature, footerForType' symbol, cn)
@@ -955,57 +968,51 @@ module DocumentationFormatter =
       | Some ent when ent.IsValueType || ent.IsEnum ->
         //ValueTypes
         let signature = getFuncSignature lastDisplayContext func
-        Some((signature, emptyTypeTip), footerForType' symbol, cn)
+        Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
       | _ ->
         //ReferenceType constructor
         let signature = getFuncSignature lastDisplayContext func
-        Some((signature, emptyTypeTip), footerForType' symbol, cn)
+        Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
     | SymbolPatterns.Operator func ->
       let signature = getFuncSignature lastDisplayContext func
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
     | Property prop ->
       let signature = getFuncSignature lastDisplayContext prop
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
     | ClosureOrNestedFunction func ->
       //represents a closure or nested function
       let signature = getFuncSignature lastDisplayContext func
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
     | Function func ->
       let signature = getFuncSignature lastDisplayContext func
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
     | Val func ->
       //val name : Type
       let signature = getValSignature lastDisplayContext func
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
-    | Field (fsf, _) ->
+    | Field(fsf, _) ->
       let signature = getFieldSignature lastDisplayContext fsf
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
     | UnionCase uc ->
-      let signature = getUnioncaseSignature lastDisplayContext uc
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      let signature = getUnionCaseSignature lastDisplayContext uc
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
     | ActivePatternCase apc ->
       let signature = getAPCaseSignature lastDisplayContext apc
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
 
     | GenericParameter gp ->
       let signature =
-        sprintf
-          "%s (requires %s)"
-          (if gp.IsSolveAtCompileTime then
-             "^" + gp.Name
-           else
-             "'" + gp.Name)
-          (formatGenericParameter false lastDisplayContext gp)
+        $"'%s{gp.Name} (requires %s{formatGenericParameter false lastDisplayContext gp})"
 
-      Some((signature, emptyTypeTip), footerForType' symbol, cn)
+      Some((signature, EntityInfo.Empty), footerForType' symbol, cn)
 
     | _ -> None

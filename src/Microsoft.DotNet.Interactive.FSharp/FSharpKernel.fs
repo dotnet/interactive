@@ -206,15 +206,14 @@ type FSharpKernel () as this =
 
                 let formattedDiagnostics =
                     fsiDiagnostics
-                    |> Array.map (fun d -> d.ToString())
-                    |> Array.map (fun text -> new FormattedValue(PlainTextFormatter.MimeType, text))
+                    |> Array.map (fun d -> new FormattedValue(PlainTextFormatter.MimeType, d.ToString()))
 
                 context.Publish(DiagnosticsProduced(diagnostics, formattedDiagnostics, codeSubmission))
 
             match result with
             | Ok(result) when not isError ->
                 match result with
-                | Some(value) when value.ReflectionType <> typeof<unit> ->
+                | Some(value) when Type.(<>)(value.ReflectionType, typeof<unit>) ->
                     let resultValue = value.ReflectionValue
                     let formattedValues : IReadOnlyList<FormattedValue> = 
                         match resultValue with
@@ -292,8 +291,17 @@ type FSharpKernel () as this =
                 }
 
             match res.TryGetToolTipEnhanced (mkPos line col) lineContent with
-            | Result.Ok (Some (tip, signature, footer, typeDoc)) ->
+            | Result.Ok (Some result) ->
+                let (tip, signature, footer, typeDoc) =
+                    result.ToolTipText,
+                    result.Signature,
+                    result.Footer,
+                    (match result.SymbolInfo with
+                     | TryGetToolTipEnhancedResult.Symbol sxa -> Some sxa.XmlDocSig
+                     | TryGetToolTipEnhancedResult.Keyword kwd -> None)
+
                 let results =
+
                     FsAutoComplete.TipFormatter.formatTipEnhanced
                         tip signature footer typeDoc
                         FsAutoComplete.TipFormatter.FormatCommentStyle.Legacy
