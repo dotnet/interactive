@@ -310,7 +310,8 @@ type FSharpKernel () as this =
                         // make footer look like in Ionide
                         let newFooter =
                             footer.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries)
-                            |> Seq.map (fun line -> line.TrimEnd('\r'))
+                            |> Seq.map (fun line -> line.Trim())  // Trim both ends to handle any whitespace
+                            |> Seq.filter (String.IsNullOrWhiteSpace >> not)  // Remove empty lines
                             |> Seq.filter (fsiAssemblyRx.IsMatch >> not)
                             |> Seq.map (sprintf "*%s*")
                             |> String.concat "\n\n----\n"
@@ -373,76 +374,159 @@ type FSharpKernel () as this =
         }
 
     let handleRequestSignatureHelp (requestSignatureHelp: RequestSignatureHelp) (context: KernelInvocationContext) =
-        let parse, check, _ctx = script.Value.Fsi.ParseAndCheckInteraction requestSignatureHelp.Code
-        let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
         let text = FSharp.Compiler.Text.SourceText.ofString requestSignatureHelp.Code
-            
+                
         // FCS uses 1-based line numbers
         let line = requestSignatureHelp.LinePosition.Line + 1
         let col = requestSignatureHelp.LinePosition.Character
-            
+                
         let lineContent = text.GetLineString(line - 1)
             
-        match res.TryGetSignatureData (mkPos line col) lineContent with
-        | Ok (returnType, parameterGroups, generics) ->
-            // Detect active parameter by counting spaces before cursor
-            // In F# function calls, parameters are separated by spaces
-            let textBeforeCursor = lineContent.Substring(0, min col lineContent.Length)
-            let openParenIndex = textBeforeCursor.LastIndexOf '('
-            let textInCall = 
-                if openParenIndex >= 0 then
-                    textBeforeCursor.Substring(openParenIndex + 1)
+        // Find the start of the current token by working backwards from cursor
+        let rec findTokenStart pos =
+            if pos <= 0 || pos > lineContent.Length then 
+                min pos lineContent.Length |> max 0
+            else
+                let c = lineContent.[pos - 1]
+                if Char.IsWhiteSpace(c) || c = '(' then pos
+                else findTokenStart (pos - 1)
+            
+        // Skip whitespace and opening parens backwards from a position
+        let rec skipWhitespaceAndParens pos =
+            if pos <= 0 then 0
+            elif Char.IsWhiteSpace(lineContent.[pos - 1]) || lineContent.[pos - 1] = '(' then
+                skipWhitespaceAndParens (pos - 1)
+            else pos
+            
+        // Skip whitespace backwards from a position
+        let rec skipWhitespace pos =
+            if pos <= 0 then 0
+            elif Char.IsWhiteSpace(lineContent.[pos - 1]) then skipWhitespace (pos - 1)
+            else pos
+            
+        // Find the start position of the function name (first token on the line)
+        let rec findFunctionName currentEnd =
+            if currentEnd <= 0 then 0
+            else
+                let pos = skipWhitespace currentEnd
+                if pos = 0 then 0
                 else
-                    textBeforeCursor
-                
-            // Count spaces to estimate parameter position (rough heuristic)
-            let activeParameter = 
-                let spaceCount = textInCall.Split([|' '|], StringSplitOptions.RemoveEmptyEntries).Length - 1
-                Math.Min(spaceCount, (parameterGroups |> List.collect id |> List.length) - 1) |> max 0
-                
-            // Build signature information
-            let parameters = 
-                parameterGroups
-                |> List.collect id  // Flatten curried parameter groups
-                |> List.map (fun (name, paramType) ->
-                    ParameterInformation(
-                        label = sprintf $"{name}: {paramType}",
-                        documentation = FormattedValue("text/markdown", "")))
-                
-            // Format the full signature with parameter groups
-            let paramsFormatted = 
-                parameterGroups
-                |> List.map (fun group ->
-                    group
-                    |> List.map (fun (name, paramType) -> sprintf "%s: %s" name paramType)
-                    |> String.concat " * ")
-                |> String.concat " -> "
-                
-            let genericsFormatted =
-                if List.isEmpty generics then ""
-                else sprintf "<%s>" (String.concat ", " generics)
-                
-            // Get function name from symbol at position
-            let functionName =
-                match res.TryGetSymbolUse (mkPos line col) lineContent with
-                | Some symbolUse -> symbolUse.Symbol.DisplayName
-                | None -> ""
-                
-            let label = 
-                if String.IsNullOrWhiteSpace paramsFormatted then
-                    sprintf $"{functionName}{genericsFormatted} : {returnType}"
-                else
-                    sprintf $"{functionName}{genericsFormatted} : {paramsFormatted} -> {returnType}"
-                
-            let signature = SignatureInformation(
-                label = label,
-                documentation = FormattedValue("text/markdown", ""),
-                parameters = parameters)
-                
-            context.Publish(SignatureHelpProduced(requestSignatureHelp, [signature], activeSignatureIndex = 0, activeParameterIndex = activeParameter))
-            Task.FromResult ()
-        | Error _ ->
-            // No signature help available at this position
+                    let start = findTokenStart pos
+                    let checkPos = skipWhitespace start
+                    if checkPos > 0 && lineContent.[checkPos - 1] <> '(' then
+                        findFunctionName checkPos
+                    else
+                        start
+            
+        // Find the end position of a token starting from a given position
+        let rec findTokenEnd pos =
+            if pos >= lineContent.Length then lineContent.Length
+            elif Char.IsWhiteSpace(lineContent.[pos]) || lineContent.[pos] = '(' then pos
+            else findTokenEnd (pos + 1)
+            
+        // Extract function name by finding the first token on the line
+        let tokenEnd = skipWhitespaceAndParens (min col lineContent.Length)
+        let functionStartPos = findFunctionName tokenEnd
+        let functionName =
+            if functionStartPos < lineContent.Length then
+                let endPos = findTokenEnd functionStartPos
+                if endPos > functionStartPos then
+                    lineContent.Substring(functionStartPos, endPos - functionStartPos).Trim()
+                else ""
+            else ""
+            
+        if not (String.IsNullOrWhiteSpace functionName) then
+                // Use F# Compiler Services to get signature information
+                // This works for both user-defined functions and BCL types
+                // Add common opens to help FCS resolve BCL types and make it a complete expression
+                let codeWithContext = 
+                    if requestSignatureHelp.Code.Contains "System." then
+                        // Add open statement and make it a complete (but invalid) expression
+                        // by adding a placeholder argument - FCS should still give us signature help
+                        let placeholder = 
+                            if requestSignatureHelp.Code.EndsWith '(' then
+                                "\"\")" // Close with a placeholder string argument
+                            else
+                                ""
+                        sprintf "open System\n%s%s" requestSignatureHelp.Code placeholder
+                    else
+                        requestSignatureHelp.Code
+                let adjustedLine = if requestSignatureHelp.Code.Contains "System." then line + 1 else line
+                let parse, check, _ctx = script.Value.Fsi.ParseAndCheckInteraction codeWithContext
+                let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
+                    
+                match res.TryGetSignatureData (mkPos adjustedLine (functionStartPos + 1)) lineContent with
+                | Ok (returnType, parameterGroups, generics) ->
+                    let functionDisplayName, documentation =
+                        match res.TryGetSymbolUse (mkPos line (functionStartPos + 1)) lineContent with
+                        | Some symbolUse -> 
+                            let displayName = symbolUse.Symbol.DisplayName
+                            let xmlDoc = symbolUse.Symbol.XmlDoc
+                            let doc = FsAutoComplete.TipFormatter.formatDocumentationFromXmlDoc xmlDoc
+                            let docString = 
+                                match doc with
+                                | FsAutoComplete.TipFormatter.TipFormatterResult.Success formatted -> formatted
+                                | _ -> ""
+                            (displayName, docString)
+                        | None -> (functionName, "")
+                        
+                    let activeParameter = 
+                        let textBeforeCursor = lineContent.Substring(0, min col lineContent.Length)
+                        let openParenIndex = textBeforeCursor.LastIndexOf '('
+                        let closeParenIndex = textBeforeCursor.LastIndexOf ')'
+                            
+                        if openParenIndex >= 0 && (closeParenIndex < 0 || openParenIndex > closeParenIndex) then
+                            let textInParens = textBeforeCursor.Substring(openParenIndex + 1)
+                            textInParens.Split(',').Length - 1
+                        else
+                            let startPos = min functionStartPos textBeforeCursor.Length
+                            let textAfterFunction = 
+                                if startPos < textBeforeCursor.Length then
+                                    textBeforeCursor.Substring(startPos).Trim()
+                                else
+                                    ""
+                            let tokens = textAfterFunction.Split([|' '; '\t'|], StringSplitOptions.RemoveEmptyEntries)
+                            max 0 (tokens.Length - 1)
+                        
+                    let ids = parameterGroups |> List.collect id
+                    let totalParams = ids |> List.length
+                    let activeParameter = min activeParameter (totalParams - 1) |> max 0
+                            
+                    let parameters = 
+                        ids
+                        |> List.map (fun (name, paramType) ->
+                            ParameterInformation(
+                                label = sprintf "%s: %s" name paramType,
+                                documentation = FormattedValue("text/markdown", "")))
+                            
+                    let paramsFormatted = 
+                        parameterGroups
+                        |> List.map (fun group ->
+                            group
+                            |> List.map (fun (name, paramType) -> sprintf $"{name}: {paramType}")
+                            |> String.concat " * ")
+                        |> String.concat " -> "
+                            
+                    let genericsFormatted =
+                        if List.isEmpty generics then ""
+                        else sprintf "<%s>" (String.concat ", " generics)
+                            
+                    let label = 
+                        if String.IsNullOrWhiteSpace paramsFormatted then
+                            sprintf $"{functionDisplayName}{genericsFormatted} : {returnType}"
+                        else
+                            sprintf $"{functionDisplayName}{genericsFormatted} : {paramsFormatted} -> {returnType}"
+                            
+                    let signature = SignatureInformation(
+                        label = label,
+                        documentation = FormattedValue("text/markdown", documentation),
+                        parameters = parameters)
+                            
+                    context.Publish(SignatureHelpProduced(requestSignatureHelp, [signature], activeSignatureIndex = 0, activeParameterIndex = activeParameter))
+                    Task.FromResult ()
+                | Error _ ->
+                    Task.FromResult ()
+        else
             Task.FromResult ()
 
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =

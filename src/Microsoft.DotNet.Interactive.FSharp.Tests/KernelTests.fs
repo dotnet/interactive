@@ -69,8 +69,8 @@ type KernelTests() =
                 "let a = 10"
             ]
 
-        /// val a: int
-        texts.Should().Contain(@"val a: int", null)
+        /// val a : int
+        texts.Should().Contain(@"val a : int", null)
         
     [<Fact>]
     member __.``HoverText for Keywords``() =
@@ -90,8 +90,8 @@ type KernelTests() =
                 "let a = Math.Sin(10.0)"
             ]
 
-        // Math.Sin(a: float) : float
-        texts.Should().ContainAll(@"static member Sin", "a: float", "-> float")
+        // Math.Sin(a : float) : float
+        texts.Should().ContainAll(@"static member Sin", "a : float", "-> float")
 
     [<Fact>]
     member __.``HoverText for Types``() =
@@ -116,8 +116,8 @@ type KernelTests() =
                 "    printfn \"%A\" a"
             ]
 
-        // val a: float
-        texts.Should().Contain(@"val a: float", null)
+        // val a : float
+        texts.Should().Contain(@"val a : float", null)
         
         
     [<Fact>]
@@ -127,8 +127,8 @@ type KernelTests() =
                 "let a = int 20.0"
             ]
 
-        // val inline int : value:'T -> int (requires member op_Explicit)
-        texts.Should().ContainAll("val inline int:", "^T (requires static member op_Explicit )", "-> int")
+        // val inline int : value : 'T -> int (requires member op_Explicit)
+        texts.Should().ContainAll("val inline int :", "^T (requires static member op_Explicit )", "-> int")
 
     [<Fact>]
     member __.``Get completion list for List module then get the 'average' function and verify it has documentation``() =
