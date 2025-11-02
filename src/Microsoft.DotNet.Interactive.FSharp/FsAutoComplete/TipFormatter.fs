@@ -505,9 +505,9 @@ module private Format =
 
   let private itemListToStringAsMarkdownList (prefix: string) (item: ItemList) =
     match item with
-    | DescriptionOnly description -> prefix + " " + description
-    | TermOnly term -> prefix + " " + "**" + term + "**"
-    | Definitions(term, description) -> prefix + " " + "**" + term + "** - " + description
+    | DescriptionOnly description -> $"{prefix} {description}"
+    | TermOnly term -> $"{prefix} **{term}**"
+    | Definitions(term, description) -> $"{prefix} **{term}** - {description}"
 
   let private list =
     let getType (attributes: Map<string, string>) = Map.tryFind "type" attributes
