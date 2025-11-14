@@ -12,7 +12,7 @@ open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Diagnostics
 open FSharp.Compiler.EditorServices
 
-[<RequireQualifiedAccess>]
+[<RequireQualifiedAccess; Struct>]
 type LangVersion =
     | V47
     | V50
