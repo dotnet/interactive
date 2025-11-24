@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <NoWarn>$(NoWarn);8002</NoWarn><!-- Assent isn't strongly signed -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
     <NoWarn>$(NoWarn);CS8509</NoWarn><!-- The switch expression does not handle all possible values of its input type (it is not exhaustive). For example, the pattern '""' is not covered.	Microsoft.DotNet.Interactive.Documents.Tests	C:\dev\interactive\src\Microsoft.DotNet.Interactive.Documents.Tests\ImportNotebookTests.cs	50	Active -->
@@ -23,7 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Linq.Async" />
     <PackageReference Include="Assent" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" />
     <PackageReference Include="AwesomeAssertions" />
@@ -43,7 +42,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="FSharp.Core" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" />
   </ItemGroup>
 
   <ItemGroup>

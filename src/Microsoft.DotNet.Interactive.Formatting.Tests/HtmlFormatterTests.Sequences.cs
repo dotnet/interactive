@@ -814,8 +814,7 @@ public partial class HtmlFormatterTests
                                 </tr>
                                 <tr>
                                     <td>2</td>
-                                    <td><span><a
-                                                href="https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-7.0">System.Linq.Enumerable+RangeIterator</a></span>
+                                    <td><span><a href="https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator-1?view=net-7.0">System.Linq.Enumerable+RangeIterator&lt;System.Int32&gt;</a></span>
                                     </td>
                                     <td>
                                         <div class="dni-plaintext">
