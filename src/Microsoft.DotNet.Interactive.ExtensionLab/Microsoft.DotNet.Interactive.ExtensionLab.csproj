@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
@@ -21,15 +21,12 @@
     <None Remove="bin\**" />
   </ItemGroup>
 
-
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Analysis" />
     <PackageReference Include="Iced" />
     <PackageReference Include="ICSharpCode.Decompiler" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="Microsoft.Diagnostics.Runtime" />
-    <PackageReference Include="System.Runtime.InteropServices" />
   </ItemGroup>
 
   <ItemGroup>

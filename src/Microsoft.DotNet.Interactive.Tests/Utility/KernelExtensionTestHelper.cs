@@ -197,7 +197,7 @@ public static class KernelExtensionTestHelper
                  <Project Sdk="Microsoft.NET.Sdk">
                  
                    <PropertyGroup>
-                     <TargetFramework>net9.0</TargetFramework>
+                     <TargetFramework>net10.0</TargetFramework>
                      <IsPackable>true</IsPackable>
                      <PackageId>{packageName}</PackageId>
                      <PackageVersion>{packageVersion}</PackageVersion>
@@ -231,7 +231,7 @@ public static class KernelExtensionTestHelper
                 """
                 {
                   "sdk": {
-                    "version": "9.0.100",
+                    "version": "10.0.100",
                     "allowPrerelease": true,
                     "rollForward": "latestMinor"
                   }
@@ -335,30 +335,36 @@ public static class KernelExtensionTestHelper
     {
         projectDir.Populate(
             ExtensionCs(code),
-            ("TestExtension.csproj", $@"
-<Project Sdk=""Microsoft.NET.Sdk"">
+            ("TestExtension.csproj",
+                $"""
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <AssemblyName>{extensionName}</AssemblyName>
-  </PropertyGroup>
+                 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <Reference Include=""Microsoft.DotNet.Interactive"">
-      <HintPath>{_microsoftDotNetInteractiveDllPath}</HintPath>
-    </Reference>
-  </ItemGroup>
+                   <PropertyGroup>
+                     <TargetFramework>net10.0</TargetFramework>
+                     <AssemblyName>{extensionName}</AssemblyName>
+                   </PropertyGroup>
 
-</Project>
-"),
-            ("global.json", @"{
-  ""sdk"": {
-    ""version"": ""9.0.100"",
-    ""allowPrerelease"": true,
-    ""rollForward"": ""latestMinor""
-  }
-}
-"));
+                   <ItemGroup>
+                     <Reference Include="Microsoft.DotNet.Interactive">
+                       <HintPath>{_microsoftDotNetInteractiveDllPath}</HintPath>
+                     </Reference>
+                   </ItemGroup>
+
+                 </Project>
+
+                 """),
+            ("global.json",
+                """
+                {
+                  "sdk": {
+                    "version": "10.0.100",
+                    "allowPrerelease": true,
+                    "rollForward": "latestMinor"
+                  }
+                }
+
+                """));
 
         var buildResult = await new Dotnet(projectDir).Build();
 
@@ -367,43 +373,47 @@ public static class KernelExtensionTestHelper
 
     private static (string, string) ExtensionCs(string code)
     {
-        return ("Extension.cs", $@"
-using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
+        return ("Extension.cs",
+                   $$"""
 
-public class TestKernelExtension : IKernelExtension
-{{
-    public async Task OnLoadAsync(Kernel kernel)
-    {{
-        {code}
-    }}
-}}
-");
+                     using System;
+                     using System.Reflection;
+                     using System.Threading.Tasks;
+                     using Microsoft.DotNet.Interactive;
+                     using Microsoft.DotNet.Interactive.Commands;
 
+                     public class TestKernelExtension : IKernelExtension
+                     {
+                         public async Task OnLoadAsync(Kernel kernel)
+                         {
+                             {{code}}
+                         }
+                     }
+
+                     """);
     }
 
     private static (string, string) FileProviderExtensionCs(string code)
     {
-        return ("Extension.cs", $@"
-using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
+        return ("Extension.cs",
+                   $$"""
 
-public class TestKernelExtension : IKernelExtension, IStaticContentSource
-{{
-    public async Task OnLoadAsync(Kernel kernel)
-    {{
-        {code}
-    }}
+                     using System;
+                     using System.Reflection;
+                     using System.Threading.Tasks;
+                     using Microsoft.DotNet.Interactive;
+                     using Microsoft.DotNet.Interactive.Commands;
 
-    public string  Name => ""TestKernelExtension"";
-}}
-");
+                     public class TestKernelExtension : IKernelExtension, IStaticContentSource
+                     {
+                         public async Task OnLoadAsync(Kernel kernel)
+                         {
+                             {{code}}
+                         }
 
+                         public string  Name => "TestKernelExtension";
+                     }
+
+                     """);
     }
 }
