@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.DotNet.Interactive.FSharp.Tests
@@ -90,8 +90,8 @@ type KernelTests() =
                 "let a = Math.Sin(10.0)"
             ]
 
-        // Math.Sin(a: float) : float
-        texts.Should().ContainAll(@"static member Sin", "a: float", "-> float")
+        // Math.Sin(a : float) : float
+        texts.Should().ContainAll(@"static member Sin", "a : float", "-> float")
 
     [<Fact>]
     member __.``HoverText for Types``() =
@@ -127,8 +127,8 @@ type KernelTests() =
                 "let a = int 20.0"
             ]
 
-        // val inline int : value:'T -> int (requires member op_Explicit)
-        texts.Should().ContainAll("val inline int:", "^T (requires static member op_Explicit )", "-> int")
+        // val inline int : value : 'T -> int (requires member op_Explicit)
+        texts.Should().ContainAll("val inline int :", "^T (requires static member op_Explicit )", "-> int")
 
     [<Fact>]
     member __.``Get completion list for List module then get the 'average' function and verify it has documentation``() =
