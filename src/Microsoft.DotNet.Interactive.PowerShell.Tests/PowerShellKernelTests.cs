@@ -417,4 +417,72 @@ for ($j = 0; $j -le 4; $j += 4 ) {
               .Should()
               .BeEquivalentHtmlTo(_tableOutputOfCustomObjectTest);
     }
+
+    [Fact]
+    public async Task PowerShell_objects_without_custom_formatters_use_native_formatting()
+    {
+        // Arrange
+        var kernel = CreateKernel(Language.PowerShell);
+        
+        // Act - Get-Process returns objects without custom formatters and should use PowerShell native formatting
+        var result = await kernel.SendAsync(new SubmitCode("Get-Process | Select-Object -First 1"));
+
+        // Assert - Should produce StandardOutputValueProduced (native PowerShell formatting) not DisplayedValueProduced
+        var outputs = result.Events.OfType<StandardOutputValueProduced>().ToList();
+        outputs.Should().NotBeEmpty("Get-Process output should use native PowerShell formatting");
+        
+        // The output should contain typical PowerShell table formatting headers
+        var allOutput = string.Join("", outputs.SelectMany(e => e.FormattedValues.Select(v => v.Value)));
+        allOutput.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task PowerShell_objects_with_custom_formatters_use_custom_formatting()
+    {
+        // Arrange
+        var kernel = CreateKernel(Language.PowerShell);
+        
+        // Register a custom formatter for FileInfo
+        Formatter.Register<FileInfo>((fileInfo, writer) =>
+        {
+            writer.Write($"CUSTOM: {fileInfo.Name}");
+        }, PlainTextFormatter.MimeType);
+
+        try
+        {
+            // Act - Create a FileInfo object which now has a custom formatter
+            var result = await kernel.SendAsync(new SubmitCode("[System.IO.FileInfo]::new('test.txt')"));
+
+            // Assert - Should produce DisplayedValueProduced (custom formatter used)
+            var displayedValues = result.Events.OfType<DisplayedValueProduced>().ToList();
+            displayedValues.Should().ContainSingle("FileInfo with custom formatter should use Display");
+            
+            var output = displayedValues.First().FormattedValues.First(f => f.MimeType == PlainTextFormatter.MimeType).Value;
+            output.Should().Contain("CUSTOM: test.txt");
+        }
+        finally
+        {
+            // Clean up - reset formatters
+            Formatter.ResetToDefault();
+        }
+    }
+
+    [Fact]
+    public async Task PowerShell_Format_Table_works_with_native_formatting()
+    {
+        // Arrange
+        var kernel = CreateKernel(Language.PowerShell);
+        
+        // Act - Use Format-Table explicitly
+        var result = await kernel.SendAsync(new SubmitCode(
+            "[pscustomobject]@{ Name='Item1'; Value=10 },[pscustomobject]@{ Name='Item2'; Value=20 } | Format-Table"));
+
+        // Assert - Should produce StandardOutputValueProduced with table formatting
+        var outputs = result.Events.OfType<StandardOutputValueProduced>().ToList();
+        outputs.Should().NotBeEmpty("Format-Table output should use native PowerShell formatting");
+        
+        var allOutput = string.Join("", outputs.SelectMany(e => e.FormattedValues.Select(v => v.Value)));
+        allOutput.Should().Contain("Name");
+        allOutput.Should().Contain("Value");
+    }
 }

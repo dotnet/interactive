@@ -378,6 +378,23 @@ public class PowerShellKernel :
         }
     }
 
+    private bool HasCustomFormatter(object value)
+    {
+        if (value is null)
+        {
+            return false;
+        }
+
+        var valueType = value.GetType();
+        var userFormatters = Formatter.RegisteredFormatters(includeDefaults: false);
+        var interfaces = valueType.GetInterfaces();
+        
+        return userFormatters.Any(f => 
+            f.Type == valueType || 
+            f.Type.IsAssignableFrom(valueType) || 
+            Array.IndexOf(interfaces, f.Type) >= 0);
+    }
+
     internal bool RunLocally(string code, out string errorMessage, bool suppressOutput = false, KernelInvocationContext context = null)
     {
         var command = new Command(code, isScript: true);
@@ -407,9 +424,24 @@ public class PowerShellKernel :
                         var formatted = new FormattedValue("text/plain", value + Environment.NewLine);
                         context.Publish(new StandardOutputValueProduced(context.Command, new[] { formatted } ));
                     }
+                    else if (HasCustomFormatter(value))
+                    {
+                        // Use custom formatter
+                        context.Display(value);
+                    }
                     else
                     {
-                        context.Display(value);
+                        // Use PowerShell native formatting
+                        Pwsh.AddCommand(_outDefaultCommand)
+                            .AddParameter("InputObject", item);
+                        Pwsh.AddCommand("Out-String");
+                        var formattedResult = Pwsh.InvokeAndClear();
+                        if (formattedResult.Count > 0)
+                        {
+                            var output = string.Concat(formattedResult);
+                            var formatted = new FormattedValue("text/plain", output);
+                            context.Publish(new StandardOutputValueProduced(context.Command, new[] { formatted }));
+                        }
                     }
                 }
             }
