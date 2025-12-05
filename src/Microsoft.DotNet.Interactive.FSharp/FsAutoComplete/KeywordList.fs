@@ -20,7 +20,7 @@ module KeywordList =
         ToolTipText
           [ ToolTipElement.Single(
               [| TaggedText.tagText kv.Key |],
-              FSharpXmlDoc.FromXmlText(FSharp.Compiler.Xml.XmlDoc(allLines, Range.Zero))
+              FSharpXmlDoc.FromXmlText(FSharp.Compiler.Xml.XmlDoc(allLines, Range.range0))
             ) ]
 
       kv.Key, tip)

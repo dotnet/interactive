@@ -307,7 +307,7 @@ public partial class HtmlFormatterTests
                 .BeEquivalentHtmlTo(
                     $$"""
                        <details open="open" class="dni-treeview">
-                           {{Tags.SummaryTextBegin}}{ PropertyA = 123, PropertyB = System.Linq.Enumerable+RangeIterator }{{Tags.SummaryTextEnd}}
+                           {{Tags.SummaryTextBegin}}{ PropertyA = 123, PropertyB = System.Linq.Enumerable+RangeIterator`1[System.Int32] }{{Tags.SummaryTextEnd}}
                            <div>
                                <table>
                                    <thead>

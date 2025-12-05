@@ -910,6 +910,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 var firstRequest = """                    
                     # @name sampleArray
                     POST https://httpbin.org/anything
+                    Accept: application/json
                     {
                       "devices": [
                         {
@@ -948,6 +949,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 var firstRequest = """                    
                     # @name sampleArray
                     POST https://httpbin.org/anything
+                    Accept: application/json
                     {
                       "devices": [
                         {

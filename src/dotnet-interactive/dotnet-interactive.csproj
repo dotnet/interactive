@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Microsoft.DotNet.Interactive.App</RootNamespace>
     <AssemblyName>Microsoft.DotNet.Interactive.App</AssemblyName>
     <LangVersion>Latest</LangVersion>
@@ -66,7 +66,6 @@
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
     <PackageReference Include="System.Reactive"  />
     <PackageReference Include="System.CommandLine" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" />
   </ItemGroup>
 
   <ItemGroup>

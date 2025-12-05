@@ -16,7 +16,7 @@
   "settings": {
     "dotnet-interactive.kernelTransportArgs": [
       "{dotnet_path}",
-      "/workspaces/interactive/artifacts/bin/dotnet-interactive/Debug/net9.0/Microsoft.DotNet.Interactive.App.dll",
+      "/workspaces/interactive/artifacts/bin/dotnet-interactive/Debug/net10.0/Microsoft.DotNet.Interactive.App.dll",
       "[vscode]",
       "stdio",
       "--working-dir",
@@ -24,7 +24,7 @@
     ],
     "dotnet-interactive.notebookParserArgs": [
       "{dotnet_path}",
-      "/workspaces/interactive/artifacts/bin/dotnet-interactive/Debug/net9.0/Microsoft.DotNet.Interactive.App.dll",
+      "/workspaces/interactive/artifacts/bin/dotnet-interactive/Debug/net10.0/Microsoft.DotNet.Interactive.App.dll",
       "notebook-parser"
     ],
     "editor.formatOnSave": true,
