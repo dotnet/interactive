@@ -29,7 +29,6 @@
     <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.IO.Pipelines" />
     <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <PackageReference Include="Microsoft.PowerShell.SDK" />
@@ -46,7 +45,6 @@
     <PackageReference Include="Microsoft.PowerShell.Archive" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.SecretManagement" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.SecretStore" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="System.Net.Http" />
     <PackageReference Include="ThreadJob" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 

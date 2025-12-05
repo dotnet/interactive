@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Documents;
@@ -16,6 +17,7 @@ using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Pocket;
 using Serilog.Sinks.RollingFileAlternate;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Program>;
@@ -91,7 +93,7 @@ public class Program
         return disposables;
     }
 
-    public static IWebHostBuilder ConstructWebHostBuilder(
+    public static IHostBuilder ConstructWebHostBuilder(
         StartupOptions options,
         IServiceCollection serviceCollection)
     {
@@ -112,17 +114,44 @@ public class Program
             probingSettings = HttpProbingSettings.Create(httpPort.PortNumber, options.GetAllNetworkInterfaces);
         }
 
-        var webHost = new WebHostBuilder()
-            .UseKestrel()
-            .UseDotNetInteractiveHttpApi(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
-            .UseStartup<Startup>();
+        var httpStartupOptions = new HttpOptions(options.EnableHttpApi, options.HttpPort);
+        var startup = new Startup(httpStartupOptions, probingSettings);
+        
+        var hostBuilder = Host.CreateDefaultBuilder()
+            .ConfigureWebHostDefaults(webHost =>
+            {
+                webHost.UseKestrel();
+                
+                if (options.EnableHttpApi && probingSettings is not null)
+                {
+                    webHost.UseUrls(string.Join(';', probingSettings.AddressList));
+                }
+                
+                // Add services from the passed-in collection
+                webHost.ConfigureServices(services =>
+                {
+                    if (serviceCollection is not null)
+                    {
+                        foreach (var serviceDescriptor in serviceCollection)
+                        {
+                            services.Add(serviceDescriptor);
+                        }
+                    }
+                    
+                    // Call ConfigureServices from our startup instance
+                    startup.ConfigureServices(services);
+                });
+                
+                // Configure the app using our startup instance
+                webHost.Configure(app =>
+                {
+                    var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
+                    var serviceProvider = app.ApplicationServices;
+                    startup.Configure(app, lifetime, serviceProvider);
+                });
+            });
 
-        if (options.EnableHttpApi && probingSettings is not null)
-        {
-            webHost = webHost.UseUrls(string.Join(';', probingSettings.AddressList));
-        }
-
-        return webHost;
+        return hostBuilder;
 
         static HttpPort GetFreePort(StartupOptions startupOptions)
         {
@@ -161,11 +190,11 @@ public class Program
         }
     }
 
-    public static IWebHost ConstructWebHost(StartupOptions options)
+    public static IHost ConstructWebHost(StartupOptions options)
     {
-        var webHost = ConstructWebHostBuilder(options, _serviceCollection)
+        var host = ConstructWebHostBuilder(options, _serviceCollection)
             .Build();
 
-        return webHost;
+        return host;
     }
 }

@@ -8,7 +8,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights"  />
     <PackageReference Include="Microsoft.DotNet.PlatformAbstractions"  />
-    <PackageReference Include="Microsoft.Win32.Registry"  />
     <PackageReference Include="System.CommandLine" />
     <PackageReference Include="PocketLogger.Subscribe" >
       <PrivateAssets>all</PrivateAssets>

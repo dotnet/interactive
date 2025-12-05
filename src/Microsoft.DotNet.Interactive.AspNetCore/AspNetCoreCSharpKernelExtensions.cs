@@ -7,7 +7,6 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -25,7 +24,7 @@ public static class AspNetCoreCSharpKernelExtensions
     private static readonly Assembly[] _references =
     {
         typeof(Host).Assembly, // Microsoft.Extensions.Hosting
-        typeof(WebHost).Assembly, // Microsoft.AspNetCore
+        typeof(WebApplication).Assembly, // Microsoft.AspNetCore
         typeof(Controller).Assembly, // Microsoft.AspNetCore.Mvc.ViewFeatures
         typeof(DeveloperExceptionPageMiddleware).Assembly, // Microsoft.AspNetCore.Diagnostics
         typeof(AspNetCoreCSharpKernelExtensions).Assembly, // Microsoft.DotNet.Interactive.AspNetCore

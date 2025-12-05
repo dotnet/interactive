@@ -54,7 +54,6 @@
     <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.Runtime.Loader" />
   </ItemGroup>
 
 </Project>
