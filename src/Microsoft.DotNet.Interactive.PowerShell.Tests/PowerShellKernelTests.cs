@@ -443,10 +443,11 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         var kernel = CreateKernel(Language.PowerShell);
         
         // Register a custom formatter for FileInfo
+        // Note: context.Display() produces HTML output by default, so we register for text/html
         Formatter.Register<FileInfo>((fileInfo, writer) =>
         {
             writer.Write($"CUSTOM: {fileInfo.Name}");
-        }, PlainTextFormatter.MimeType);
+        }, HtmlFormatter.MimeType);
 
         try
         {
@@ -457,8 +458,9 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             var displayedValues = result.Events.OfType<DisplayedValueProduced>().ToList();
             displayedValues.Should().ContainSingle("FileInfo with custom formatter should use Display");
             
-            var output = displayedValues.First().FormattedValues.First(f => f.MimeType == PlainTextFormatter.MimeType).Value;
-            output.Should().Contain("CUSTOM: test.txt");
+            var htmlValue = displayedValues.First().FormattedValues.FirstOrDefault(f => f.MimeType == HtmlFormatter.MimeType);
+            htmlValue.Should().NotBeNull("HTML formatted value should be present");
+            htmlValue.Value.Should().Contain("CUSTOM: test.txt");
         }
         finally
         {
