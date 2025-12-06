@@ -430,10 +430,12 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         // Assert - Should produce StandardOutputValueProduced (native PowerShell formatting) not DisplayedValueProduced
         var outputs = result.Events.OfType<StandardOutputValueProduced>().ToList();
         outputs.Should().NotBeEmpty("Get-Process output should use native PowerShell formatting");
-        
-        // The output should contain typical PowerShell table formatting headers
+
+        // The output should contain typical PowerShell table formatting with headers and dashes separator
         var allOutput = string.Join("", outputs.SelectMany(e => e.FormattedValues.Select(v => v.Value)));
-        allOutput.Should().NotBeEmpty();
+        allOutput.Should().NotBeEmpty()
+            .And.ContainAny("NPM", "PM", "WS", "CPU", "Id", "SI", "ProcessName") // Common Get-Process column headers
+            .And.Match("*---*"); // PowerShell table separator line
     }
 
     [Fact]
@@ -484,7 +486,9 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         outputs.Should().NotBeEmpty("Format-Table output should use native PowerShell formatting");
         
         var allOutput = string.Join("", outputs.SelectMany(e => e.FormattedValues.Select(v => v.Value)));
-        allOutput.Should().Contain("Name");
-        allOutput.Should().Contain("Value");
+        allOutput.Should().Contain("Name")
+            .And.Contain("Value")
+            .And.Match("*---*") // PowerShell table separator line
+            .And.ContainAny("Item1", "Item2"); // Data values
     }
 }
