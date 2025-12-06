@@ -77,6 +77,7 @@ public class PowerShellKernelTests : LanguageKernelTestBase
 
     public PowerShellKernelTests(ITestOutputHelper output) : base(output)
     {
+        DisposeAfterTest(() => Formatter.ResetToDefault());
     }
 
     [Theory]
@@ -451,25 +452,17 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             writer.Write($"CUSTOM: {fileInfo.Name}");
         }, HtmlFormatter.MimeType);
 
-        try
-        {
-            // Act - Create a FileInfo object which now has a custom formatter
-            var result = await kernel.SendAsync(new SubmitCode("[System.IO.FileInfo]::new('test.txt')"));
+        // Act - Create a FileInfo object which now has a custom formatter
+        var result = await kernel.SendAsync(new SubmitCode("[System.IO.FileInfo]::new('test.txt')"));
 
-            // Assert - Should produce DisplayedValueProduced (custom formatter used)
-            var displayedValues = result.Events.OfType<DisplayedValueProduced>().ToList();
-            displayedValues.Should().ContainSingle("FileInfo with custom formatter should use Display");
-            
-            var htmlValue = displayedValues.First().FormattedValues.FirstOrDefault(f => f.MimeType == HtmlFormatter.MimeType);
-            htmlValue.Should().NotBeNull("HTML formatted value should be present");
-            htmlValue.Value.Should().Contain("CUSTOM: test.txt");
-        }
-        finally
-        {
-            // Clean up - reset formatters
-            Formatter.ResetToDefault();
-        }
-    }
+        // Assert - Should produce DisplayedValueProduced (custom formatter used)
+        var displayedValues = result.Events.OfType<DisplayedValueProduced>().ToList();
+        displayedValues.Should().ContainSingle("FileInfo with custom formatter should use Display");
+
+        var htmlValue = displayedValues.First().FormattedValues.FirstOrDefault(f => f.MimeType == HtmlFormatter.MimeType);
+        htmlValue.Should().NotBeNull("HTML formatted value should be present");
+        htmlValue.Value.Should().Contain("CUSTOM: test.txt");
+  }
 
     [Fact]
     public async Task PowerShell_Format_Table_works_with_native_formatting()
