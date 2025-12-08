@@ -378,6 +378,35 @@ public class PowerShellKernel :
         }
     }
 
+    private bool HasCustomFormatter(object value)
+    {
+        if (value is null)
+        {
+            return false;
+        }
+
+        var valueType = value.GetType();
+        var userFormatters = Formatter.RegisteredFormatters(includeDefaults: false);
+        var interfaces = valueType.GetInterfaces();
+        
+        return userFormatters.Any(f => 
+            f.Type == valueType || 
+            f.Type.IsAssignableFrom(valueType) || 
+            Array.IndexOf(interfaces, f.Type) >= 0);
+    }
+
+    private static bool IsFormattingObject(PSObject psObject)
+    {
+        // Check if this is a formatting object from Format-Table, Format-List, etc.
+        // These objects are in the Microsoft.PowerShell.Commands.Internal.Format namespace
+        if (psObject?.BaseObject != null)
+        {
+            var typeName = psObject.BaseObject.GetType().FullName;
+            return typeName?.StartsWith("Microsoft.PowerShell.Commands.Internal.Format.") == true;
+        }
+        return false;
+    }
+
     internal bool RunLocally(string code, out string errorMessage, bool suppressOutput = false, KernelInvocationContext context = null)
     {
         var command = new Command(code, isScript: true);
@@ -398,18 +427,53 @@ public class PowerShellKernel :
 
             if (!suppressOutput && context is not null)
             {
-                foreach (var item in result)
+                // Check if the result contains formatting objects (from Format-Table, Format-List, etc.)
+                // These need to be processed as a complete pipeline, not individually
+                if (result.Count > 0 && IsFormattingObject(result[0]))
                 {
-                    var value = item is PSObject ps ? ps.Unwrap() : item;
+                    // Pass all formatting objects to Out-String at once
+                    Pwsh.AddCommand("Out-String");
+                    var formattedResult = Pwsh.Invoke(result);
+                    Pwsh.Commands.Clear();
 
-                    if (item.TypeNames[0] == "System.String")
+                    if (formattedResult.Count > 0)
                     {
-                        var formatted = new FormattedValue("text/plain", value + Environment.NewLine);
-                        context.Publish(new StandardOutputValueProduced(context.Command, new[] { formatted } ));
+                        var output = string.Concat(formattedResult);
+                        var formatted = new FormattedValue("text/plain", output);
+                        context.Publish(new StandardOutputValueProduced(context.Command, new[] { formatted }));
                     }
-                    else
+                }
+                else
+                {
+                    // Process each item individually
+                    foreach (var item in result)
                     {
-                        context.Display(value);
+                        var value = item is PSObject ps ? ps.Unwrap() : item;
+
+                        if (item.TypeNames[0] == "System.String")
+                        {
+                            var formatted = new FormattedValue("text/plain", value + Environment.NewLine);
+                            context.Publish(new StandardOutputValueProduced(context.Command, new[] { formatted } ));
+                        }
+                        else if (HasCustomFormatter(value))
+                        {
+                            // Use custom formatter
+                            context.Display(value);
+                        }
+                        else
+                        {
+                            // Use PowerShell native formatting
+                            Pwsh.AddCommand(_outDefaultCommand)
+                                .AddParameter("InputObject", item);
+                            Pwsh.AddCommand("Out-String");
+                            var formattedResult = Pwsh.InvokeAndClear();
+                            if (formattedResult.Count > 0)
+                            {
+                                var output = string.Concat(formattedResult);
+                                var formatted = new FormattedValue("text/plain", output);
+                                context.Publish(new StandardOutputValueProduced(context.Command, new[] { formatted }));
+                            }
+                        }
                     }
                 }
             }
