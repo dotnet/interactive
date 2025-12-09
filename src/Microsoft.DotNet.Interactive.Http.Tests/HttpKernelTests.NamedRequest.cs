@@ -903,7 +903,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name '{{{headerName}}}' does not exist in the named request.""");
             }
 
-            [Fact]
+            [Fact(Skip = "Failing because httpbin.org is down")]
             public async Task accessing_an_index_in_a_json_array_succeeds()
             {
                 using var kernel = new HttpKernel();
@@ -942,7 +942,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 response.Request.Headers["X-Value"].First().Should().Be("5601db0f-32e0-4d82-bc79-251e50fa1407");
             }
 
-            [Fact]
+            [Fact(Skip = "Failing because httpbin.org is down")]
             public async Task accessing_multiple_indexes_in_a_json_array_succeeds()
             {
                 using var kernel = new HttpKernel();
