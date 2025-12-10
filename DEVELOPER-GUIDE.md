@@ -123,7 +123,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
       ```json
         "dotnet-interactive.kernelTransportArgs": [
             "{dotnet_path}",
-            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net9.0/Microsoft.DotNet.Interactive.App.dll",
+            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net10.0/Microsoft.DotNet.Interactive.App.dll",
             "[vscode]",
             "stdio",
             "--log-path",
@@ -135,7 +135,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
 
         "dotnet-interactive.notebookParserArgs": [
             "{dotnet_path}",
-            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net9.0/Microsoft.DotNet.Interactive.App.dll",
+            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net10.0/Microsoft.DotNet.Interactive.App.dll",
             "notebook-parser",
             "--log-path",
             "/path/to/a/folder/for/your/parser-logs/",

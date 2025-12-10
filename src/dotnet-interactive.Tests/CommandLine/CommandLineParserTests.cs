@@ -138,9 +138,8 @@ public class CommandLineParserTests : IDisposable
         await using var fileStream = new FileStream(logFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var fileReader = new StreamReader(fileStream);
 
-        while (!fileReader.EndOfStream)
+        while (await fileReader.ReadLineAsync() is { } line)
         {
-            var line = await fileReader.ReadLineAsync();
             logFileContents.Append(line);
         }
 

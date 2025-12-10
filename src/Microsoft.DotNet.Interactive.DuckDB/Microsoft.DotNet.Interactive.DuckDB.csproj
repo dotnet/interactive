@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.DuckDB</PackageId>
     <NoWarn>$(NoWarn);8002;CS8002</NoWarn>

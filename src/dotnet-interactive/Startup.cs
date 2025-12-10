@@ -16,11 +16,11 @@ namespace Microsoft.DotNet.Interactive.App;
 internal class Startup
 {
     public Startup(
-        IHostEnvironment env,
-        HttpOptions httpOptions)
+        HttpOptions httpOptions,
+        HttpProbingSettings httpProbingSettings)
     {
-        Environment = env;
         HttpOptions = httpOptions;
+        HttpProbingSettings = httpProbingSettings;
 
         var configurationBuilder = new ConfigurationBuilder();
 
@@ -29,9 +29,9 @@ internal class Startup
 
     protected IConfigurationRoot Configuration { get; }
 
-    protected IHostEnvironment Environment { get; }
-
     public HttpOptions HttpOptions { get; }
+    
+    public HttpProbingSettings HttpProbingSettings { get; }
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -55,7 +55,7 @@ internal class Startup
             app.UseDotNetInteractiveHttpApi(
                 serviceProvider.GetRequiredService<Kernel>(), 
                 typeof(Program).Assembly,
-                serviceProvider.GetRequiredService<HttpProbingSettings>(),
+                HttpProbingSettings,
                 HttpOptions.HttpPort);
         }
     }

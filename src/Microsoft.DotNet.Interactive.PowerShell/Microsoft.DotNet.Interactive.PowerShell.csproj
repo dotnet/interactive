@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);2003;CS8002;NU1608;</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder; expected since it's under contentFiles/any/any/Modules/ -->
@@ -29,7 +29,6 @@
     <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.IO.Pipelines" />
     <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <PackageReference Include="Microsoft.PowerShell.SDK" />
@@ -46,7 +45,6 @@
     <PackageReference Include="Microsoft.PowerShell.Archive" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.SecretManagement" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.SecretStore" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="System.Net.Http" />
     <PackageReference Include="ThreadJob" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 

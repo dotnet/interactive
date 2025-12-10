@@ -160,6 +160,11 @@ internal class SignatureHelpService
     {
         var documentation = DocumentationConverter.GetDocumentation(symbol, "\n");
 
+        if (documentation is null)
+        {
+            documentation = new("text/markdown", "");
+        }
+
         var label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
         var parameters = GetParameters(symbol)
