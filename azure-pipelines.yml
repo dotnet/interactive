@@ -65,7 +65,6 @@ variables:
 - template: /eng/templates/variables-template.yml@self
 - template: /eng/common/templates/variables/pool-providers.yml@self
 
-
 stages:
 - stage: build
   displayName: Build and Test
@@ -82,6 +81,8 @@ stages:
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
+      settings:
+        networkIsolationPolicy: Permissive,CFSClean
       enableMicrobuild: true
       enablePublishBuildArtifacts: true
       enablePublishTestResults: true

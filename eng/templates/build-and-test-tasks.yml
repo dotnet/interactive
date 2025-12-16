@@ -19,7 +19,7 @@ steps:
     displayName: Log npm version (before)
 
   - script: |
-      npm install -g npm@11.6.0
+      npm install -g npm@11.6.0 --globalconfig $(Build.SourcesDirectory)\src\polyglot-notebooks\.npmrc
     displayName: Install npm v11.6.0
 
   - script: |
