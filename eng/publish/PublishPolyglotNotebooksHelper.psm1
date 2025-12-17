@@ -3,7 +3,7 @@ function FindChildItem {
         [string]$pattern
     )
 
-    $childItem = = Get-ChildItem $pattern | Select-Object -First 1
+    $childItem = Get-ChildItem $pattern | Select-Object -First 1
     Write-Host "Found extension: $childItem"
 
     $fileSize = $childItem.Length
