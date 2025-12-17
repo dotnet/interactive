@@ -44,6 +44,21 @@ function PublishInsidersExtension {
         }
     }
 
+    Write-Host "Verify the extension signature..."
+    $output = vsce verify-signature --packagePath $extension --manifestPath $manifest --signaturePath $signature
+
+    # This is a brittle check but the command does not return a non-zero exit code for failed validation.
+    # Opened https://github.com/microsoft/vscode-vsce/issues/1192 to track this.
+    if ($output.Contains('Signature verification result: Success')) {
+        Write-Host "Signature verification succeeded for $extension"
+    } else {
+        Write-Host ($output | Out-String)
+        Write-Host "##[error]Signature verification failed for $extension"
+        if (!$simulate) {
+            exit 1
+        }
+    }
+
     Write-Host "Publishing extension $extension to VS Code Marketplace using Managed Identity..."
     if ($simulate) {
         Write-Host "Simulated command: vsce publish --pre-release --packagePath $extension --manifestPath $manifest --signaturePath $signature --noVerify --azure-credential"
