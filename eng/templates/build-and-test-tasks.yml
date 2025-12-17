@@ -75,7 +75,7 @@ steps:
       workingDirectory: "$(Build.SourcesDirectory)/src"
       pwsh: true
 
-  - script: dotnet build $(Build.SourcesDirectory)\eng\msbuild\signVsix -bl -v:normal
+  - script: dotnet build $(Build.SourcesDirectory)\eng\msbuild\signVsix -bl -v:normal /p:OutDir="$(Build.ArtifactStagingDirectory)\vscode"
     displayName: Sign VS Code Extensions
     env:
       SignType: ${{ parameters.signType }}

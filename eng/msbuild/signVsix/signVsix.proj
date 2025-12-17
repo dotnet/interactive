@@ -5,7 +5,7 @@
     <EnableDefaultSignFiles>false</EnableDefaultSignFiles>
     <MicroBuild_DoNotStrongNameSign>true</MicroBuild_DoNotStrongNameSign>
     <IsPackable>false</IsPackable>
-    <OutDir>$(RepoRoot)artifacts\vscode\</OutDir>
+    <OutDir Condition="'$(OutDir)' == ''">$(RepoRoot)artifacts\vscode\</OutDir>
   </PropertyGroup>
   <ItemGroup>
     <FilesToSign Include="$(OutDir)stable-locked\*.signature.p7s">
