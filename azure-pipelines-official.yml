@@ -77,6 +77,8 @@ extends:
           notificationAliases: ['dotnetInteractive@microsoft.com']
           serviceTreeID: 'ab4d58de-beb3-4714-866c-1b46a48ea002'
           allTools: true
+    settings:
+      networkIsolationPolicy: Permissive,CFSClean
     stages:
     - stage: build
       displayName: Build and Test
