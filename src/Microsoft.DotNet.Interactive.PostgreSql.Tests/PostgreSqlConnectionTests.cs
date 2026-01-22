@@ -11,8 +11,10 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.App;
+using Microsoft.DotNet.Interactive.Commands;
 using FluentAssertions;
 using Xunit;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
@@ -82,152 +84,151 @@ public class PostgreSqlConnectionTests : IDisposable
             .Contain("column \"not_known_column\" does not exist");
     }
 
-//     public async Task When_variable_does_not_exist_then_an_error_is_returned()
-// {
-//     var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-//     using var kernel = await CreateKernelAsync();
-//     var result = await kernel.SubmitCodeAsync(
-//         $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+    [PostgreSqlFact]
+    public async Task When_variable_does_not_exist_then_an_error_is_returned()
+    {
+        var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = CreateKernel();
+        var result = await kernel.SubmitCodeAsync(
+            $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-//     result.Events
-//         .Should()
-//         .NotContainErrors();
+        result.Events
+            .Should()
+            .NotContainErrors();
 
-//     var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
+        var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
 
-//     result = await sqlKernel.SendAsync(new RequestValue("my_data_result"));
+        result = await sqlKernel.SendAsync(new RequestValue("my_data_result"));
 
-//     result.Events.Should()
-//           .ContainSingle<CommandFailed>()
-//           .Which
-//           .Message
-//           .Should()
-//           .Contain("Value 'my_data_result' not found in kernel sql-adventureworks");
-// }
+        result.Events.Should()
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Message
+              .Should()
+              .Contain("Value 'my_data_result' not found in kernel sql-adventureworks");
+    }
 
-//  [MsSqlFact]
-//     public async Task It_can_store_result_set_with_a_name()
-//     {
-//         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-//         using var kernel = await CreateKernelAsync();
-//         await kernel.SubmitCodeAsync(
-//             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+    [PostgreSqlFact]
+    public async Task It_can_store_result_set_with_a_name()
+    {
+        var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = CreateKernel();
+        await kernel.SubmitCodeAsync(
+            $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-//         // Run query with result set
-//         await kernel.SubmitCodeAsync($@"
-// #!sql-adventureworks --name my_data_result
-// select * from sys.databases
-// ");
+        // Run query with result set
+        await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --name my_data_result
+SELECT * FROM customers LIMIT 10;
+");
 
-//         // Use share to fetch result set
-//         var result = await kernel.SubmitCodeAsync($@"
-// #!csharp
-// #!share --from sql-adventureworks my_data_result
-// my_data_result");
+        // Use share to fetch result set
+        var result = await kernel.SubmitCodeAsync($@"
+#!csharp
+#!share --from sql-adventureworks my_data_result
+my_data_result");
 
-//         // Verify the variable loaded is of the correct type and has the expected number of result sets
-//         result.Events
-//               .Should()
-//               .ContainSingle<ReturnValueProduced>()
-//               .Which
-//               .Value
-//               .Should()
-//               .BeAssignableTo<IEnumerable<TabularDataResource>>()
-//               .Which.Count()
-//               .Should()
-//               .Be(1);
-//     }
+        // Verify the variable loaded is of the correct type and has the expected number of result sets
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .BeAssignableTo<IEnumerable<TabularDataResource>>()
+              .Which.Count()
+              .Should()
+              .Be(1);
+    }
 
-//     [MsSqlFact]
-//     public async Task Stored_query_results_are_listed_in_ValueInfos()
-//     {
-//         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-//         using var kernel = await CreateKernelAsync();
-//         await kernel.SubmitCodeAsync(
-//             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+    [PostgreSqlFact]
+    public async Task Stored_query_results_are_listed_in_ValueInfos()
+    {
+        var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = CreateKernel();
+        await kernel.SubmitCodeAsync(
+            $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-//         // Run query with result set
-//         await kernel.SubmitCodeAsync($@"
-// #!sql-adventureworks --name my_data_result
-// select * from sys.databases
-// ");
+        // Run query with result set
+        await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --name my_data_result
+SELECT * FROM customers LIMIT 10;
+");
 
-//         var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
+        var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
 
-//         var result = await sqlKernel.SendAsync(new RequestValueInfos());
+        var result = await sqlKernel.SendAsync(new RequestValueInfos());
 
-//         var valueInfos = result.Events.Should().ContainSingle<ValueInfosProduced>()
-//             .Which.ValueInfos;
+        var valueInfos = result.Events.Should().ContainSingle<ValueInfosProduced>()
+            .Which.ValueInfos;
 
-//         valueInfos.Should().Contain(v => v.Name == "my_data_result");
-//     }
+        valueInfos.Should().Contain(v => v.Name == "my_data_result");
+    }
 
-//     [MsSqlFact]
-//     public async Task Storing_results_does_interfere_with_subsequent_executions()
-//     {
-//         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-//         using var kernel = await CreateKernelAsync();
-//         await kernel.SubmitCodeAsync(
-//             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+    [PostgreSqlFact]
+    public async Task Storing_results_does_interfere_with_subsequent_executions()
+    {
+        var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = CreateKernel();
+        await kernel.SubmitCodeAsync(
+            $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-//         // Run query with result set
-//         await kernel.SubmitCodeAsync($@"
-// #!sql-adventureworks --name my_data_result
-// select * from sys.databases
-// ");
+        // Run query with result set
+        await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --name my_data_result
+SELECT * FROM customers LIMIT 10;
+");
 
-//         var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
+        var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
 
-//         var result = await sqlKernel.SendAsync(new RequestValueInfos());
+        var result = await sqlKernel.SendAsync(new RequestValueInfos());
 
-//         var valueInfos = result.Events.Should().ContainSingle<ValueInfosProduced>()
-//             .Which.ValueInfos;
+        var valueInfos = result.Events.Should().ContainSingle<ValueInfosProduced>()
+            .Which.ValueInfos;
 
-//         valueInfos.Should().Contain(v => v.Name == "my_data_result");
+        valueInfos.Should().Contain(v => v.Name == "my_data_result");
 
-//          result =  await kernel.SubmitCodeAsync($@"
-// #!sql-adventureworks --name my_data_result
-// select * from sys.databases
-// ");
+         result =  await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --name my_data_result
+SELECT * FROM customers LIMIT 10;
+");
 
-//          result.Events.Should().NotContainErrors();
-//     }
+         result.Events.Should().NotContainErrors();
+    }
 
-// [MsSqlFact]
-//     public async Task It_can_store_multiple_result_set_with_a_name()
-//     {
-//         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-//         using var kernel = await CreateKernelAsync();
-//         await kernel.SubmitCodeAsync(
-//             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+    [PostgreSqlFact]
+    public async Task It_can_store_multiple_result_set_with_a_name()
+    {
+        var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = CreateKernel();
+        await kernel.SubmitCodeAsync(
+            $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-//         // Run query with result set
-//         await kernel.SubmitCodeAsync($@"
-// #!sql-adventureworks --name my_data_result
-// select * from sys.databases
-// select * from sys.databases
-// ");
+        // Run query with result set
+        await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --name my_data_result
+SELECT * FROM customers LIMIT 5;
+SELECT * FROM customers LIMIT 5;
+");
 
-//         // Use share to fetch result set
-//         var result = await kernel.SubmitCodeAsync($@"
-// #!csharp
-// #!share --from sql-adventureworks my_data_result
-// my_data_result");
+        // Use share to fetch result set
+        var result = await kernel.SubmitCodeAsync($@"
+#!csharp
+#!share --from sql-adventureworks my_data_result
+my_data_result");
 
-//         // Verify the variable loaded is of the correct type and has the expected number of result sets
-//         result.Events
-//               .Should()
-//               .ContainSingle<ReturnValueProduced>()
-//               .Which
-//               .Value
-//               .Should()
-//               .BeAssignableTo<IEnumerable<TabularDataResource>>()
-//               .Which.Count()
-//               .Should()
-//               .Be(2);
-//     }
-
-
+        // Verify the variable loaded is of the correct type and has the expected number of result sets
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .BeAssignableTo<IEnumerable<TabularDataResource>>()
+              .Which.Count()
+              .Should()
+              .Be(2);
+    }
 
     public void Dispose()
     {

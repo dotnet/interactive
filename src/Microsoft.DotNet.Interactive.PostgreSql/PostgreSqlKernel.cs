@@ -13,6 +13,7 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Npgsql;
 using Enumerable = System.Linq.Enumerable;
 
@@ -21,7 +22,8 @@ namespace Microsoft.DotNet.Interactive.PostgreSql;
 public class PostgreSqlKernel :
     Kernel,
     IKernelCommandHandler<SubmitCode>,
-    IKernelCommandHandler<RequestValue>
+    IKernelCommandHandler<RequestValue>,
+    IKernelCommandHandler<RequestValueInfos>
 {
     private readonly string _connectionString;
     private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> _tables;
@@ -84,7 +86,8 @@ public class PostgreSqlKernel :
         finally
         {
             submitCode.Parameters.TryGetValue("--name", out var queryName);
-            StoreQueryResultSet(queryName ?? "", results);
+            string name = queryName ?? "";
+            _resultSets[name] = results;
         }
     }
 
@@ -153,7 +156,7 @@ public class PostgreSqlKernel :
         }
     }
 
-    public bool TryGetValue<T>(string name, out T value)
+    private bool TryGetValue<T>(string name, out T value)
     {
         if (_resultSets.TryGetValue(name, out var resultSet) &&
             resultSet is T resultSetT)
@@ -186,8 +189,27 @@ public class PostgreSqlKernel :
         return Task.CompletedTask;
     }
 
-    protected void StoreQueryResultSet(string name, IReadOnlyCollection<TabularDataResource> queryResultSet)
+    Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        _resultSets[name] = queryResultSet;
+        var valueInfos = CreateKernelValueInfos(_resultSets, command.MimeType).ToArray();
+
+        context.Publish(new ValueInfosProduced(valueInfos, command));
+
+        return Task.CompletedTask;
+
+        static IEnumerable<KernelValueInfo> CreateKernelValueInfos(IReadOnlyDictionary<string, object> source, string mimeType)
+        {
+            return source.Keys.Select(key =>
+            {
+                var formattedValues = FormattedValue.CreateSingleFromObject(
+                    source[key],
+                    mimeType);
+
+                return new KernelValueInfo(
+                    key,
+                    formattedValues,
+                    type: typeof(IEnumerable<TabularDataResource>));
+            });
+        }
     }
 }
