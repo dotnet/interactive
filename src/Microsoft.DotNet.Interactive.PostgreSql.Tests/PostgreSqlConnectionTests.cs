@@ -116,19 +116,16 @@ public class PostgreSqlConnectionTests : IDisposable
         await kernel.SubmitCodeAsync(
             $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-        // Run query with result set
         await kernel.SubmitCodeAsync($@"
 #!sql-adventureworks --name my_data_result
 SELECT * FROM customers LIMIT 10;
 ");
 
-        // Use share to fetch result set
         var result = await kernel.SubmitCodeAsync($@"
 #!csharp
 #!share --from sql-adventureworks my_data_result
 my_data_result");
 
-        // Verify the variable loaded is of the correct type and has the expected number of result sets
         result.Events
               .Should()
               .ContainSingle<ReturnValueProduced>()
@@ -149,7 +146,6 @@ my_data_result");
         await kernel.SubmitCodeAsync(
             $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-        // Run query with result set
         await kernel.SubmitCodeAsync($@"
 #!sql-adventureworks --name my_data_result
 SELECT * FROM customers LIMIT 10;
@@ -173,7 +169,6 @@ SELECT * FROM customers LIMIT 10;
         await kernel.SubmitCodeAsync(
             $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-        // Run query with result set
         await kernel.SubmitCodeAsync($@"
 #!sql-adventureworks --name my_data_result
 SELECT * FROM customers LIMIT 10;
@@ -204,20 +199,17 @@ SELECT * FROM customers LIMIT 10;
         await kernel.SubmitCodeAsync(
             $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-        // Run query with result set
         await kernel.SubmitCodeAsync($@"
 #!sql-adventureworks --name my_data_result
 SELECT * FROM customers LIMIT 5;
 SELECT * FROM customers LIMIT 5;
 ");
 
-        // Use share to fetch result set
         var result = await kernel.SubmitCodeAsync($@"
 #!csharp
 #!share --from sql-adventureworks my_data_result
 my_data_result");
 
-        // Verify the variable loaded is of the correct type and has the expected number of result sets
         result.Events
               .Should()
               .ContainSingle<ReturnValueProduced>()
