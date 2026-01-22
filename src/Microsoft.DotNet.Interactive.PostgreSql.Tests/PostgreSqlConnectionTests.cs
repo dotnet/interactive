@@ -116,15 +116,16 @@ public class PostgreSqlConnectionTests : IDisposable
         await kernel.SubmitCodeAsync(
             $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-        await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --name my_data_result
-SELECT * FROM customers LIMIT 10;
-");
+        await kernel.SubmitCodeAsync("""
+            #!sql-adventureworks --name my_data_result
+            SELECT * FROM customers LIMIT 10;
+            """);
 
-        var result = await kernel.SubmitCodeAsync($@"
-#!csharp
-#!share --from sql-adventureworks my_data_result
-my_data_result");
+        var result = await kernel.SubmitCodeAsync("""
+            #!csharp
+            #!share --from sql-adventureworks my_data_result
+            my_data_result
+            """);
 
         result.Events
               .Should()
@@ -146,10 +147,10 @@ my_data_result");
         await kernel.SubmitCodeAsync(
             $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-        await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --name my_data_result
-SELECT * FROM customers LIMIT 10;
-");
+        await kernel.SubmitCodeAsync("""
+            #!sql-adventureworks --name my_data_result
+            SELECT * FROM customers LIMIT 10;
+            """);
 
         var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
 
@@ -169,10 +170,10 @@ SELECT * FROM customers LIMIT 10;
         await kernel.SubmitCodeAsync(
             $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-        await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --name my_data_result
-SELECT * FROM customers LIMIT 10;
-");
+        await kernel.SubmitCodeAsync("""
+            #!sql-adventureworks --name my_data_result
+            SELECT * FROM customers LIMIT 10;
+            """);
 
         var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
 
@@ -183,10 +184,10 @@ SELECT * FROM customers LIMIT 10;
 
         valueInfos.Should().Contain(v => v.Name == "my_data_result");
 
-         result =  await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --name my_data_result
-SELECT * FROM customers LIMIT 10;
-");
+         result =  await kernel.SubmitCodeAsync("""
+            #!sql-adventureworks --name my_data_result
+            SELECT * FROM customers LIMIT 10;
+            """);
 
          result.Events.Should().NotContainErrors();
     }
@@ -199,16 +200,17 @@ SELECT * FROM customers LIMIT 10;
         await kernel.SubmitCodeAsync(
             $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"");
 
-        await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --name my_data_result
-SELECT * FROM customers LIMIT 5;
-SELECT * FROM customers LIMIT 5;
-");
+        await kernel.SubmitCodeAsync("""
+            #!sql-adventureworks --name my_data_result
+            SELECT * FROM customers LIMIT 5;
+            SELECT * FROM customers LIMIT 5;
+            """);
 
-        var result = await kernel.SubmitCodeAsync($@"
-#!csharp
-#!share --from sql-adventureworks my_data_result
-my_data_result");
+        var result = await kernel.SubmitCodeAsync("""
+            #!csharp
+            #!share --from sql-adventureworks my_data_result
+            my_data_result
+            """);
 
         result.Events
               .Should()
