@@ -25,7 +25,12 @@ export async function acquireDotnetInteractive(
 
     // create tool manifest if necessary
     const toolManifestFile = path.join(globalStoragePath, '.config', 'dotnet-tools.json');
-    if (!fs.existsSync(toolManifestFile)) {
+    const alternativeToolManifestFile = path.join(globalStoragePath, 'dotnet-tools.json');
+    
+    const exsistAtAny = [toolManifestFile, alternativeToolManifestFile]
+        .some(item => fs.existsSync(toolManifestFile));
+    
+    if (!exsistAtAny) {
         await createToolManifest(args.dotnetPath, globalStoragePath);
     }
 
