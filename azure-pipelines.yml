@@ -65,208 +65,191 @@ variables:
 - template: /eng/templates/variables-template.yml@self
 - template: /eng/common/templates/variables/pool-providers.yml@self
 
-resources:
-  repositories:
-  - repository: MicroBuildTemplate
-    type: git
-    name: 1ESPipelineTemplates/MicroBuildTemplate
-    ref: refs/tags/release
+stages:
+- stage: build
+  displayName: Build and Test
+  jobs:
+  - ${{ if ne(variables['System.TeamProject'], 'public') }}:
+    - template: /eng/common/templates/job/onelocbuild.yml
+      parameters:
+        MirrorRepo: interactive
+        MirrorBranch: main
+        SkipLocProjectJsonGeneration: true
+        LclSource: lclFilesfromPackage
+        LclPackageId: 'LCL-JUNO-PROD-INTERACTIVE'
+        CreatePr: $(LocPRCreationEnabled)
 
-extends:
-  template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@MicroBuildTemplate
-  parameters:
-    sdl:
-      sourceAnalysisPool:
-        name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022
-        os: windows
-      tsa:
-        enabled: false
-    settings:
-      networkIsolationPolicy: Permissive,CFSClean
-    stages:
-    - stage: build
-      displayName: Build and Test
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      settings:
+        networkIsolationPolicy: Permissive,CFSClean
+      enableMicrobuild: true
+      enablePublishBuildArtifacts: true
+      enablePublishTestResults: true
+      enablePublishBuildAssets: true
+      enablePublishUsingPipelines: $(_PublishUsingPipelines)
+
       jobs:
-      - ${{ if ne(variables['System.TeamProject'], 'public') }}:
-        - template: /eng/common/templates/job/onelocbuild.yml
+      - job: Windows_NT
+        pool:
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: $(DncEngPublicBuildPool)
+            demands: ImageOverride -equals windows.vs2022.amd64.open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: $(DncEngInternalBuildPool)
+            demands: ImageOverride -equals windows.vs2022.amd64
+        timeoutInMinutes: 200
+        variables:
+        # Enable signing for internal, non-PR builds
+        - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          - group: DotNet-Symbol-Server-Pats
+          - name: _SignType
+            value: Real
+          - name: _BuildArgs
+            value: /p:SignType=$(_SignType)
+                   /p:DotNetSignType=$(_SignType)
+                   /p:MicroBuild_SigningEnabled=true
+                   /p:TeamName=$(_TeamName)
+                   /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
+                   /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
+                   /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+                   /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+                   /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+                   /p:PublishToSymbolServer=true
+        # else
+        - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+          - name: _SignType
+            value: Test
+          - name: _BuildArgs
+            value: /p:SignType=$(_SignType)
+
+        steps:
+        - checkout: self
+          clean: true
+
+        # Use common task group
+        - template: /eng/templates/build-and-test-tasks.yml@self
           parameters:
-            MirrorRepo: interactive
-            MirrorBranch: main
-            SkipLocProjectJsonGeneration: true
-            LclSource: lclFilesfromPackage
-            LclPackageId: 'LCL-JUNO-PROD-INTERACTIVE'
-            CreatePr: $(LocPRCreationEnabled)
+            platform: windows
+        
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Test results and Blame dumps
+          inputs:
+            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+            artifactName: Windows_test_results_and_dumps
+            artifactType: container
+          condition: always()
 
-      - template: /eng/common/templates/jobs/jobs.yml
-        parameters:
-          enableMicrobuild: true
-          enablePublishBuildArtifacts: true
-          enablePublishTestResults: true
-          enablePublishBuildAssets: true
-          enablePublishUsingPipelines: $(_PublishUsingPipelines)
+        - task: PublishBuildArtifacts@1
+          displayName: Publish VSCode extension artifacts
+          inputs:
+            pathToPublish: $(Build.ArtifactStagingDirectory)\vscode
+            artifactName: vscode
+            artifactType: container
 
-          jobs:
-          - job: Windows_NT
-            pool:
-              ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngPublicBuildPool)
-                demands: ImageOverride -equals windows.vs2022.amd64.open
-              ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngInternalBuildPool)
-                demands: ImageOverride -equals windows.vs2022.amd64
-            timeoutInMinutes: 200
-            variables:
-            # Enable signing for internal, non-PR builds
-            - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-              - group: DotNet-Symbol-Server-Pats
-              - name: _SignType
-                value: Real
-              - name: _BuildArgs
-                value: /p:SignType=$(_SignType)
-                       /p:DotNetSignType=$(_SignType)
-                       /p:MicroBuild_SigningEnabled=true
-                       /p:TeamName=$(_TeamName)
-                       /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
-                       /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
-                       /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-                       /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-                       /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-                       /p:PublishToSymbolServer=true
-            # else
-            - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-              - name: _SignType
-                value: Test
-              - name: _BuildArgs
-                value: /p:SignType=$(_SignType)
+        - task: PublishBuildArtifacts@1
+          displayName: Publish NPM package artifacts
+          inputs:
+            pathToPublish: $(Build.ArtifactStagingDirectory)\npm
+            artifactName: npm
+            artifactType: container
 
-            steps:
-            - checkout: self
-              clean: true
-
-            # Use common task group
-            - template: /eng/templates/build-and-test-tasks.yml@self
-              parameters:
-                platform: windows
-
-            - task: PublishBuildArtifacts@1
-              displayName: Publish Test results and Blame dumps
-              inputs:
-                pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-                artifactName: Windows_test_results_and_dumps
-                artifactType: container
-              condition: always()
-
-            - task: PublishBuildArtifacts@1
-              displayName: Publish VSCode extension artifacts
-              inputs:
-                pathToPublish: $(Build.ArtifactStagingDirectory)\vscode
-                artifactName: vscode
-                artifactType: container
-
-            - task: PublishBuildArtifacts@1
-              displayName: Publish NPM package artifacts
-              inputs:
-                pathToPublish: $(Build.ArtifactStagingDirectory)\npm
-                artifactName: npm
-                artifactType: container
-
-            - task: PublishBuildArtifacts@1
-              displayName: Publish packages to artifacts container
-              inputs:
-                pathToPublish: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)
-                artifactName: packages
-                artifactType: container
+        - task: PublishBuildArtifacts@1
+          displayName: Publish packages to artifacts container
+          inputs:
+            pathToPublish: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)
+            artifactName: packages
+            artifactType: container
 
 
-      - template: /eng/common/templates/jobs/jobs.yml
-        parameters:
-          enableMicrobuild: true
-          enablePublishBuildArtifacts: true
-          enablePublishTestResults: true
-          enablePublishBuildAssets: false
-          enablePublishUsingPipelines: false
-          jobs:
-          - job: Linux
-            pool:
-              ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngPublicBuildPool)
-                demands: ImageOverride -equals Build.Ubuntu.2204.Amd64.Open
-              ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngInternalBuildPool)
-                demands: ImageOverride -equals Build.Ubuntu.2204.Amd64
-            timeoutInMinutes: 200
-            variables:
-            # Enable signing for internal, non-PR builds
-            - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-              - name: _SignType
-                value: Test
-              - name: _BuildArgs
-                value: /p:SignType=$(_SignType)
-                       /p:DotNetSignType=$(_SignType)
-                       /p:TeamName=$(_TeamName)
-                       /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-            # else
-            - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-              - name: _SignType
-                value: Test
-              - name: _BuildArgs
-                value: /p:SignType=$(_SignType)
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enablePublishBuildArtifacts: true
+      enablePublishTestResults: true
+      enablePublishBuildAssets: false
+      enablePublishUsingPipelines: false
+      jobs:
+      - job: Linux
+        pool:
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: $(DncEngPublicBuildPool)
+            demands: ImageOverride -equals Build.Ubuntu.2204.Amd64.Open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: $(DncEngInternalBuildPool)
+            demands: ImageOverride -equals Build.Ubuntu.2204.Amd64
+        timeoutInMinutes: 200
+        variables:
+        # Enable signing for internal, non-PR builds
+        - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          - name: _SignType
+            value: Test
+          - name: _BuildArgs
+            value: /p:SignType=$(_SignType)
+              /p:DotNetSignType=$(_SignType)
+              /p:TeamName=$(_TeamName)
+              /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        # else
+        - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+          - name: _SignType
+            value: Test
+          - name: _BuildArgs
+            value: /p:SignType=$(_SignType)
 
-            steps:
-            - checkout: self
-              clean: true
+        steps:
+        - checkout: self
+          clean: true
 
-            # Use common task group
-            - template: /eng/templates/build-and-test-tasks.yml@self
-              parameters:
-                platform: linux
+        # Use common task group
+        - template: /eng/templates/build-and-test-tasks.yml@self
+          parameters:
+            platform: linux
+        
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Test results and Blame dumps
+          inputs:
+            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+            artifactName: Linux_test_results_and_dumps
+            artifactType: container
+          condition: always()
 
-            - task: PublishBuildArtifacts@1
-              displayName: Publish Test results and Blame dumps
-              inputs:
-                pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-                artifactName: Linux_test_results_and_dumps
-                artifactType: container
-              condition: always()
+#---------------------------------------------------------------------------------------------------------------------#
+#                                                    Post Build                                                       #
+#---------------------------------------------------------------------------------------------------------------------#
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng/common/templates/post-build/post-build.yml
+    parameters:
+      publishingInfraVersion: 3
+      # signing validation currently has issues with dotnet 7; disabling as per internal guidance
+      enableSigningValidation: false
+      # Symbol validation is not entirely reliable as of yet, so should be turned off until https://github.com/dotnet/arcade/issues/2871 is resolved.
+      enableSymbolValidation: false
+      # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
+      enableSourceLinkValidation: false
+      # Enable SDL validation, passing through values from the 'DotNet-FSharp-SDLValidation-Params' group.
+      SDLValidationParameters:
+        enable: true
+        params: >-
+          -SourceToolsList @("policheck","credscan")
+          -TsaInstanceURL $(_TsaInstanceURL)
+          -TsaProjectName $(_TsaProjectName)
+          -TsaNotificationEmail $(_TsaNotificationEmail)
+          -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+          -TsaBugAreaPath $(_TsaBugAreaPath)
+          -TsaIterationPath $(_TsaIterationPath)
+          -TsaRepositoryName "Interactive"
+          -TsaCodebaseName "Interactive-GitHub"
+          -TsaPublish $True
+          -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
 
-    #---------------------------------------------------------------------------------------------------------------------#
-    #                                                    Post Build                                                       #
-    #---------------------------------------------------------------------------------------------------------------------#
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - template: eng/common/templates/post-build/post-build.yml
-        parameters:
-          publishingInfraVersion: 3
-          # signing validation currently has issues with dotnet 7; disabling as per internal guidance
-          enableSigningValidation: false
-          # Symbol validation is not entirely reliable as of yet, so should be turned off until https://github.com/dotnet/arcade/issues/2871 is resolved.
-          enableSymbolValidation: false
-          # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
-          enableSourceLinkValidation: false
-          # Enable SDL validation, passing through values from the 'DotNet-FSharp-SDLValidation-Params' group.
-          SDLValidationParameters:
-            enable: true
-            params: >-
-              -SourceToolsList @("policheck","credscan")
-              -TsaInstanceURL $(_TsaInstanceURL)
-              -TsaProjectName $(_TsaProjectName)
-              -TsaNotificationEmail $(_TsaNotificationEmail)
-              -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
-              -TsaBugAreaPath $(_TsaBugAreaPath)
-              -TsaIterationPath $(_TsaIterationPath)
-              -TsaRepositoryName "Interactive"
-              -TsaCodebaseName "Interactive-GitHub"
-              -TsaPublish $True
-              -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
-
-    #---------------------------------------------------------------------------------------------------------------------#
-    #                                                    NPM Publish                                                      #
-    #---------------------------------------------------------------------------------------------------------------------#
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - template: eng/publish/publish-npm.yml
-        parameters:
-          packageName: microsoft-polyglot-notebooks-*.tgz
-          registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
-          registryUser: dnceng
-          registryEmail: dnceng@microsoft.com
-          publishingBranch: main
+#---------------------------------------------------------------------------------------------------------------------#
+#                                                    NPM Publish                                                      #
+#---------------------------------------------------------------------------------------------------------------------#
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng/publish/publish-npm.yml
+    parameters:
+      packageName: microsoft-polyglot-notebooks-*.tgz
+      registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
+      registryUser: dnceng
+      registryEmail: dnceng@microsoft.com
+      publishingBranch: main
