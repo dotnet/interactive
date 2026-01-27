@@ -203,9 +203,9 @@ extends:
                 value: Test
               - name: _BuildArgs
                 value: /p:SignType=$(_SignType)
-                  /p:DotNetSignType=$(_SignType)
-                  /p:TeamName=$(_TeamName)
-                  /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+                       /p:DotNetSignType=$(_SignType)
+                       /p:TeamName=$(_TeamName)
+                       /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
             # else
             - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
               - name: _SignType
