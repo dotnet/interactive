@@ -49,7 +49,6 @@ steps:
     env:
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
       DOTNET_INTERACTIVE_FRONTEND_NAME: CI
-      DOTNET_INTERACTIVE_SIGN_TYPE: ${{ parameters.signType }}
 
   - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
     displayName: Test / Blame
@@ -57,7 +56,6 @@ steps:
     env:
       BUILDCONFIG: $(_BuildConfig)
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
-      DOTNET_INTERACTIVE_SIGN_TYPE: ${{ parameters.signType }}
     condition: ne(variables['SkipTests'], 'true')
 
   # publish VS Code and npm test results
@@ -133,7 +131,6 @@ steps:
     env:
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
       DOTNET_INTERACTIVE_FRONTEND_NAME: CI
-      DOTNET_INTERACTIVE_SIGN_TYPE: ${{ parameters.signType }}
 
   - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
     displayName: Test / Blame
@@ -141,7 +138,6 @@ steps:
     env:
       BUILDCONFIG: $(_BuildConfig)
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
-      DOTNET_INTERACTIVE_SIGN_TYPE: ${{ parameters.signType }}
     condition: ne(variables['SkipTests'], 'true')
 
   # Publish VS Code and npm test results
