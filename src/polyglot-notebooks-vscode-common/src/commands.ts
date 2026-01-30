@@ -61,7 +61,7 @@ export async function registerAcquisitionCommands(context: vscode.ExtensionConte
     }));
 
     async function createToolManifest(dotnetPath: string, globalStoragePath: string): Promise<void> {
-        const result = await executeSafeAndLog(diagnosticChannel, 'create-tool-manifest', dotnetPath, ['new', 'tool-manifest'], globalStoragePath);
+        const result = await executeSafeAndLog(diagnosticChannel, 'create-tool-manifest', dotnetPath, ['new', 'tool-manifest', '--force'], globalStoragePath);
         if (result.code !== 0) {
             throw new Error(`Unable to create local tool manifest.  Command failed with code ${result.code}.\n\nSTDOUT:\n${result.output}\n\nSTDERR:\n${result.error}`);
         }
