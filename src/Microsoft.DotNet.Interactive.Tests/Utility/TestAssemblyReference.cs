@@ -34,7 +34,7 @@ public class TestAssemblyReference : IDisposable
     public async Task<string> BuildAndGetPathToAssembly()
     {
         var dotnet = new Dotnet(Directory.Directory);
-        var result = await dotnet.Build();
+        var result = await dotnet.Build("--source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json");
         result.ThrowOnFailure("Failed to build sample assembly");
         var assemblyPath = Path.Combine(Directory.Directory.FullName, "bin", "Debug", TargetFramework, $"{ProjectName}.dll");
         if (!File.Exists(assemblyPath))
