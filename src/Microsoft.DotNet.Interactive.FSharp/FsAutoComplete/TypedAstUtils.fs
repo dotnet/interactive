@@ -1,9 +1,11 @@
-///Original code from VisualFSharpPowerTools project: https://github.com/fsprojects/VisualFSharpPowerTools/blob/master/src/FSharp.Editing/Common/TypedAstUtils.fs
+//Original code from VisualFSharpPowerTools project: https://github.com/fsprojects/VisualFSharpPowerTools/blob/master/src/FSharp.Editing/Common/TypedAstUtils.fs
 namespace FsAutoComplete
 
 open System
 open System.Text.RegularExpressions
 open FSharp.Compiler.Symbols
+open UntypedAstUtils
+
 
 [<AutoOpen>]
 module TypedAstUtils =
@@ -32,11 +34,9 @@ module TypedAstUtils =
     | Some name when name = typeof<'T>.Name -> true
     | _ -> false
 
-  let hasAttribute<'T> (attributes: seq<FSharpAttribute>) =
-    attributes |> Seq.exists isAttribute<'T>
+  let hasAttribute<'T> (attributes: seq<FSharpAttribute>) = attributes |> Seq.exists isAttribute<'T>
 
-  let tryGetAttribute<'T> (attributes: seq<FSharpAttribute>) =
-    attributes |> Seq.tryFind isAttribute<'T>
+  let tryGetAttribute<'T> (attributes: seq<FSharpAttribute>) = attributes |> Seq.tryFind isAttribute<'T>
 
   let hasModuleSuffixAttribute (entity: FSharpEntity) =
     entity.Attributes
@@ -49,23 +49,23 @@ module TypedAstUtils =
           let res =
             match arg with
             | :? int32 as arg when arg = int CompilationRepresentationFlags.ModuleSuffix -> Some()
-            | :? CompilationRepresentationFlags as arg when arg = CompilationRepresentationFlags.ModuleSuffix -> Some()
+            | :? CompilationRepresentationFlags as arg when arg = CompilationRepresentationFlags.ModuleSuffix ->
+              Some()
             | _ -> None
 
           res)))
     |> Option.isSome
 
   let isOperator (name: string) =
-    name.StartsWith "( "
-    && name.EndsWith " )"
+    name.StartsWith("( ", StringComparison.Ordinal)
+    && name.EndsWith(" )", StringComparison.Ordinal)
     && name.Length > 4
     && name.Substring(2, name.Length - 4)
        |> String.forall (fun c -> c <> ' ' && not (Char.IsLetter c))
 
   let private UnnamedUnionFieldRegex = Regex("^Item(\d+)?$", RegexOptions.Compiled)
 
-  let isUnnamedUnionCaseField (field: FSharpField) =
-    UnnamedUnionFieldRegex.IsMatch(field.Name)
+  let isUnnamedUnionCaseField (field: FSharpField) = UnnamedUnionFieldRegex.IsMatch(field.Name)
 
 [<AutoOpen>]
 module TypedAstExtensionHelpers =
@@ -82,7 +82,7 @@ module TypedAstExtensionHelpers =
         match fullName with
         | Some fullName ->
           match Option.attempt (fun _ -> x.DisplayName) with
-          | Some shortDisplayName when not (shortDisplayName.Contains ".") ->
+          | Some shortDisplayName when not (shortDisplayName.Contains '.') ->
             Some(fullName |> Array.replace (fullName.Length - 1) shortDisplayName)
           | _ -> Some fullName
         | None -> None
@@ -145,7 +145,7 @@ module TypedAstExtensionHelpers =
 
       loop x 0
 
-    //TODO: Do we need to unannotate like above?
+    //TODO: Do we need to un-annotate like above?
     member x.AllBaseTypes =
       let rec allBaseTypes (entity: FSharpEntity) =
         [ match entity.TryFullName with
@@ -171,19 +171,32 @@ module TypedAstExtensionHelpers =
       match fullName with
       | Some fullName ->
         match Option.attempt (fun _ -> x.DisplayName) with
-        | Some shortDisplayName when not (shortDisplayName.Contains ".") ->
+        | Some shortDisplayName when not (shortDisplayName.Contains '.') ->
           Some(fullName |> Array.replace (fullName.Length - 1) shortDisplayName)
         | _ -> Some fullName
       | None -> None
       |> Option.map (fun fullDisplayName -> String.Join(".", fullDisplayName))
 
+    member x.TryGetFullCompiledOperatorNameIdents() : Idents option =
+      // For operator ++ displayName is ( ++ ) compiledName is op_PlusPlus
+      if isOperator x.DisplayName && x.DisplayName <> x.CompiledName then
+        x.DeclaringEntity
+        |> Option.bind (fun e -> e.TryGetFullName())
+        |> Option.map (fun enclosingEntityFullName ->
+          Array.append (enclosingEntityFullName.Split '.') [| x.CompiledName |])
+      else
+        None
     member x.IsConstructor = x.CompiledName = ".ctor"
 
     member x.IsOperatorOrActivePattern =
-      x.CompiledName.StartsWith "op_"
+      x.CompiledName.StartsWith("op_", StringComparison.Ordinal)
       || let name = x.DisplayName in
 
-         if name.StartsWith "( " && name.EndsWith " )" && name.Length > 4 then
+         if
+           name.StartsWith("( ", StringComparison.Ordinal)
+           && name.EndsWith(" )", StringComparison.Ordinal)
+           && name.Length > 4
+         then
            name.Substring(2, name.Length - 4) |> String.forall (fun c -> c <> ' ')
          else
            false
@@ -218,13 +231,13 @@ module TypedAstExtensionHelpers =
   type FSharpSymbol with
 
     /// <summary>
-    /// If this member is a type abbeviation (<c>type Foo = Bar&lt;string&gt;</c> for example),
+    /// If this member is a type abbreviation (<c>type Foo = Bar&lt;string&gt;</c> for example),
     /// resolves the underlying type. Otherwise returns this type.
     /// </summary>
     member this.GetAbbreviatedParent() =
       match this with
       | Entity e ->
-        if e.IsFSharpAbbreviation then
+        if e.IsFSharpAbbreviation && e.AbbreviatedType.HasTypeDefinition then
           e.AbbreviatedType.TypeDefinition.GetAbbreviatedParent()
         else
           this
@@ -273,7 +286,7 @@ module TypedAstExtensionHelpers =
       | UnionCase fsu -> fsu.XmlDoc
       | ActivePattern apc -> apc.XmlDoc
       | GenericParameter gp -> gp.XmlDoc
-      | Parameter p -> FSharpXmlDoc.None
+      | Parameter _ -> FSharpXmlDoc.None
 
   type FSharpGenericParameterMemberConstraint with
 
