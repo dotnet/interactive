@@ -70,9 +70,6 @@ const disposables: (() => void)[] = [];
 let surveryBanner: SurveyBanner;
 
 export async function activate(context: vscode.ExtensionContext) {
-    const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
-    const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
-    const minDotNetSdkVersion = '9.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : diagnostics'));
     const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
@@ -87,6 +84,20 @@ export async function activate(context: vscode.ExtensionContext) {
             loggerChannel.appendLine(`[${messageLogLevel}] ${logEntry.source}: ${logEntry.message}`);
         }
     });
+
+    try {
+        await activateCore(context, diagnosticsChannel);
+    } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : `${e}`;
+        diagnosticsChannel.appendLine(`Extension activation failed: ${errorMessage}`);
+        notebookSerializers.createAndRegisterFallbackNotebookSerializers(context, errorMessage);
+    }
+}
+
+async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel: OutputChannelAdapter) {
+    const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
+    const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
+    const minDotNetSdkVersion = '9.0';
 
     await waitForSdkPackExtension();
 
