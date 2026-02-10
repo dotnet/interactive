@@ -97,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
 async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel: OutputChannelAdapter) {
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
     const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
-    const minDotNetSdkVersion = '9.0';
+    const minDotNetSdkVersion = '10.0';
 
     await waitForSdkPackExtension();
 
