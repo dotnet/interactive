@@ -101,6 +101,15 @@ async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel
 
     await waitForSdkPackExtension();
 
+    // show deprecation notice on first activation
+    const deprecationShownKey = 'polyglotNotebooks.deprecationNoticeShown';
+    const hasShownDeprecation = context.globalState.get<boolean>(deprecationShownKey, false);
+    if (!hasShownDeprecation) {
+        const helpServiceInstance = new helpService.HelpService(context);
+        await helpServiceInstance.showHelpPage(helpService.Deprecation);
+        await context.globalState.update(deprecationShownKey, true);
+    }
+
     // this must happen early, because some following functions use the acquisition command
     await registerAcquisitionCommands(context, diagnosticsChannel);
 
