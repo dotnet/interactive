@@ -18,6 +18,6 @@ The Polyglot Notebooks extension will be deprecated on **March 27th, 2026**.
 
 ## 🙏 Thank You
 
-We want to express our sincere gratitude to all the users who have supported and contributed to the Polyglot Notebooks Extension. Your feedback, bug reports, and feature requests have been invaluable in shaping the extension.
+We want to express our sincere gratitude to all the users who have supported and contributed to the Polyglot Notebooks extension. Your feedback, bug reports, and feature requests have been invaluable in shaping the extension.
 
 While Polyglot Notebooks may be deprecated, our mission to make C# development delightful and accessible continues in our flagship products; we're carrying that work forward through [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) and the next generation of AI-powered coding experiences.
