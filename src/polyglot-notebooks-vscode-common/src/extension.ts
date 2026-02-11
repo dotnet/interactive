@@ -20,7 +20,7 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { languageToCellKind } from './interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 
-import { createOutput, debounce, getWorkingDirectoryForNotebook, processArguments } from './utilities';
+import { createOutput, debounce, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionGreaterOrEqual, processArguments } from './utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as notebookControllers from './notebookControllers';
@@ -97,6 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
 async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel: OutputChannelAdapter) {
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
     const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
+    const minDotNetSdkVersion = '10.0';
 
     await waitForSdkPackExtension();
 
@@ -111,6 +112,26 @@ async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel
 
     // this must happen early, because some following functions use the acquisition command
     await registerAcquisitionCommands(context, diagnosticsChannel);
+
+    // check sdk version
+    let showHelpPage = false;
+    try {
+        const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
+        if (!isVersionGreaterOrEqual(dotnetVersion, minDotNetSdkVersion)) {
+            showHelpPage = true;
+            const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The required version is ${minDotNetSdkVersion}.`;
+            diagnosticsChannel.appendLine(message);
+            vscode.window.showErrorMessage(message);
+        }
+    } catch (e) {
+        showHelpPage = true;
+        vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download/dotnet/${minDotNetSdkVersion}`);
+    }
+
+    if (showHelpPage) {
+        const helpServiceInstance = new helpService.HelpService(context);
+        await helpServiceInstance.showHelpPageAndThrow(helpService.DotNetVersion);
+    }
 
     // grammars
     const tokensProvider = new semanticTokens.DocumentSemanticTokensProvider(context.extension.packageJSON);

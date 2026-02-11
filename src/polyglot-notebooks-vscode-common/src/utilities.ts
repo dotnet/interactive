@@ -77,6 +77,19 @@ export function createOutput(outputItems: Array<NotebookCellOutputItem>, outputI
     return output;
 }
 
+export async function getDotNetVersionOrThrow(dotnetPath: string, outputChannel: OutputChannelAdapter): Promise<string> {
+    const dotnetVersionResult = await executeSafe(dotnetPath, ['--version']);
+    Logger.default.info(`Output of "dotnet --version":\n${dotnetVersionResult.output}`);
+    if (dotnetVersionResult.code !== 0) {
+        const message = `Unable to determine the version of the .NET SDK.\nSTDOUT:\n${dotnetVersionResult.output}\nSTDERR:\n${dotnetVersionResult.error}`;
+        outputChannel.appendLine(message);
+        throw new Error(message);
+    }
+
+    const dotnetVersion = getVersionNumber(dotnetVersionResult.output);
+    return dotnetVersion;
+}
+
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, workingDirectory: string, dotnetPath: string, globalStoragePath: string, env?: { [key: string]: string }): ProcessStart {
     let map: { [key: string]: string } = {
         'dotnet_path': dotnetPath,
@@ -268,6 +281,14 @@ export function getVersionNumber(output: string): string {
 export function isVersionExactlyEqual(firstVersion: string, secondVersion: string): boolean {
     try {
         return compareVersions.compare(firstVersion, secondVersion, '=');
+    } catch (_) {
+        return false;
+    }
+}
+
+export function isVersionGreaterOrEqual(firstVersion: string, secondVersion: string): boolean {
+    try {
+        return compareVersions.compare(firstVersion, secondVersion, '>=');
     } catch (_) {
         return false;
     }
