@@ -1,6 +1,6 @@
 # 📢 DEPRECATION ANNOUNCEMENT: Polyglot Notebooks
 
-The Polyglot Notebooks Extension will be deprecated on **March 27th, 2026**. 
+The Polyglot Notebooks extension will be deprecated on **March 27th, 2026**. 
 
 ## ❓What This Means
 
