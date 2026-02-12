@@ -5,9 +5,11 @@ The Polyglot Notebooks extension will be deprecated on **March 27th, 2026**.
 ## ❓What This Means
 
 - The extension will not be disabled or uninstalled from your VS Code.
-- No new features will be added.
+- No new features will be added to Polyglot Notebooks or the .NET Interactive kernal for Jupyter notebook usage.
 - Bug fixes and support will end immediately.
 - The extension will be marked as deprecated.
+- Issues in this repository related to the Polyglot Notebooks extension will be closed as not planned.
+- Issues in this repository related to using .NET Interactive as a kernal in other Jupyter frontends will be closed as not planned.
 
 ## ✅ Recommended Action
 
