@@ -128,7 +128,7 @@ async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel
         vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download/dotnet/${minDotNetSdkVersion}`);
     }
 
-    if (showHelpPage) {
+    if (showHelpPage && hasShownDeprecation) {
         const helpServiceInstance = new helpService.HelpService(context);
         await helpServiceInstance.showHelpPageAndThrow(helpService.DotNetVersion);
     }
