@@ -5,18 +5,24 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 export const DotNetVersion = 'DotNetVersion';
+export const Deprecation = 'Polyglot Notebooks Deprecation';
 
 export type HelpPage =
-    typeof DotNetVersion;
+    typeof DotNetVersion |
+    typeof Deprecation;
 
 export class HelpService {
     constructor(private readonly context: vscode.ExtensionContext) {
     }
 
-    async showHelpPageAndThrow(page: HelpPage): Promise<void> {
+    async showHelpPage(page: HelpPage): Promise<void> {
         const helpPagePath = getHelpPagePath(this.context, page);
         const helpPageUri = vscode.Uri.file(helpPagePath);
         await vscode.commands.executeCommand('markdown.showPreview', helpPageUri);
+    }
+
+    async showHelpPageAndThrow(page: HelpPage): Promise<void> {
+        await this.showHelpPage(page);
         throw new Error('Error activating extension, see the displayed help page for more details.');
     }
 }
