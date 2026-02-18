@@ -16,7 +16,7 @@ module Syntax =
   let (|ConstructorPats|) =
     function
     | SynArgPats.Pats ps -> ps
-    | SynArgPats.NamePatPairs(pats = xs) -> xs |> List.map (fun (_, _, pat) -> pat)
+    | SynArgPats.NamePatPairs(pats = xs) -> xs |> List.map (fun npf -> npf.Pattern)
 
   /// A pattern that collects all patterns from a `SynSimplePats` into a single flat list
   let (|AllSimplePats|) (pats: SynSimplePats) =
@@ -334,15 +334,6 @@ module Syntax =
       | SynExpr.NamedIndexedPropertySet(_, e1, e2, _) -> List.iter walkExpr [ e1; e2 ]
       | SynExpr.DotNamedIndexedPropertySet(e1, _, e2, e3, _) -> List.iter walkExpr [ e1; e2; e3 ]
       | SynExpr.JoinIn(e1, _, e2, _) -> List.iter walkExpr [ e1; e2 ]
-      | SynExpr.LetOrUseBang(pat = pat; rhs = e1; andBangs = ands; body = e2; range = _) ->
-        walkPat pat
-        walkExpr e1
-
-        for SynExprAndBang(pat = pat; body = body; range = _) in ands do
-          walkPat pat
-          walkExpr body
-
-        walkExpr e2
       | SynExpr.TraitCall(t, sign, e, _) ->
         walkType t
         walkMemberSig sign
