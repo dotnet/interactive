@@ -101,6 +101,15 @@ async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel
 
     await waitForSdkPackExtension();
 
+    // show deprecation notice on first activation
+    const deprecationShownKey = 'polyglotNotebooks.deprecationNoticeShown';
+    const hasShownDeprecation = context.globalState.get<boolean>(deprecationShownKey, false);
+    if (!hasShownDeprecation) {
+        const helpServiceInstance = new helpService.HelpService(context);
+        await helpServiceInstance.showHelpPage(helpService.Deprecation);
+        await context.globalState.update(deprecationShownKey, true);
+    }
+
     // this must happen early, because some following functions use the acquisition command
     await registerAcquisitionCommands(context, diagnosticsChannel);
 
@@ -119,7 +128,7 @@ async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel
         vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download/dotnet/${minDotNetSdkVersion}`);
     }
 
-    if (showHelpPage) {
+    if (showHelpPage && hasShownDeprecation) {
         const helpServiceInstance = new helpService.HelpService(context);
         await helpServiceInstance.showHelpPageAndThrow(helpService.DotNetVersion);
     }
