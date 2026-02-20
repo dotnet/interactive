@@ -1,5 +1,7 @@
 # .NET Interactive
 
+## 🚨Polyglot Notebooks will be deprecated March 27th, 2026. For more information on Polyglot Notebooks and .NET Interactive, please read the [announcement](https://github.com/dotnet/interactive/issues/4163).
+
 ## What is .NET Interactive?
 
 .NET Interactive is an engine and API for running and editing code interactively, including:
@@ -8,9 +10,9 @@
 * Evaluating code to provide language services such as completions and diagnostics.
 * Sharing data and variables between multiple languages and across remote machines.
 
-While typically associated with notebook technologies such as Jupyter and the [Polyglot Notebooks extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), .NET Interactive has other uses as well, such as building REPLs and embedded script engines.
+While typically associated with notebook technologies such as Jupyter, .NET Interactive has other uses as well, such as building REPLs and embedded script engines.
 
-The following languages are supported by Polyglot Notebooks and .NET Interactive:
+The following languages are supported by .NET Interactive:
 
 | Language                      | Variable sharing |
 |-------------------------------|------------------|
@@ -25,16 +27,6 @@ The following languages are supported by Polyglot Notebooks and .NET Interactive
 | HTML                         |        ⛔         |     
 | HTTP                         |        ✅         | 
 | [Mermaid](https://mermaid.js.org/intro/)         |        ⛔       |        
-
-### Polyglot Notebooks
-
-Since .NET Interactive is capable of running as a kernel for notebooks, it enables a polyglot (multi-language) notebook experience. When using the .NET Interactive kernel, you can use different languages from one cell to the next, share variables between languages, and dynamically connect new languages and remote kernels within a notebook. There's no need to install different Jupyter kernels, use wrapper libraries, or install different tools to get the best experience for the language of your choice. You can always use the best language for the job and seamlessly transition between different stages of your workflow, all within one notebook.
-
-For the best experience when working with multi-language notebooks, we recommend installing the [Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code. While the full .NET Interactive feature set is available in Jupyter, many features are only usable via code, whereas the Polyglot Notebooks extension provides additional features including a language/kernel picker for each cell, enhanced language services, a multi-kernel variable viewer, and more.
-
-### Jupyter
-
-The most popular notebook platform is Jupyter, and .NET Interactive is a fully supported Jupyter kernel that you can use with Jupyter Notebook, JupyterLab, nteract, and other Jupyter frontends. You can read more about using .NET Interactive as a Jupyter kernel [here](docs/NotebookswithJupyter.md).
 
 ### REPLs
 
@@ -79,10 +71,6 @@ The .NET Core tools collect usage data in order to help us improve your experien
 ```
 
 To disable this message and the .NET Core welcome message, set the `DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE` environment variable to `true`. Note that this variable has no effect on telemetry opt out.
-
-## Contribution Guidelines
-
-You can contribute to .NET Interactive with issues and pull requests. Simply filing issues for problems you encounter is a great way to contribute. Contributing code improvements is greatly appreciated. You can read more about our contribution guidelines [here](CONTRIBUTING.md).
 
 ## Trademarks
 
