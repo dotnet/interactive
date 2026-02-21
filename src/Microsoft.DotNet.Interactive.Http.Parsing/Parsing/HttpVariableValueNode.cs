@@ -15,5 +15,7 @@ internal class HttpVariableValueNode : HttpSyntaxNode
 
     public void Add(HttpEmbeddedExpressionNode node) => AddInternal(node);
 
+    public void Add(HttpEscapedCharacterSequenceNode node) => AddInternal(node);
+
     public HttpBindingResult<string> TryGetValue(HttpBindingDelegate bind) => this.BindByInterpolation(bind);
 }

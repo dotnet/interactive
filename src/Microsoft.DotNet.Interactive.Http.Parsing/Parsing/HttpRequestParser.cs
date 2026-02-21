@@ -138,12 +138,18 @@ internal class HttpRequestParser
                 if (node is null)
                 {
                     if (CurrentToken is
-                        { Kind: TokenKind.Word } or
-                        { Kind: TokenKind.Punctuation } and ({ Text: "/" } or { Text: "'" } or { Text: "\"" }))
+                    { Kind: TokenKind.Word } or
+                    { Kind: TokenKind.Punctuation } and ({ Text: "/" } or { Text: "'" } or { Text: "\"" }))
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
 
                         ParseLeadingWhitespaceAndComments(node);
+                    }
+                    else if (IsStartOfEscapeSequence())
+                    {
+                        node = new HttpVariableValueNode(_sourceText, _syntaxTree);
+                        var escapedSequence = ParseEscapeSequence();
+                        node.Add(escapedSequence);
                     }
                     else if (IsAtStartOfEmbeddedExpression())
                     {
@@ -163,6 +169,10 @@ internal class HttpRequestParser
                 if (IsAtStartOfEmbeddedExpression())
                 {
                     node.Add(ParseEmbeddedExpression());
+                }
+                else if (IsStartOfEscapeSequence())
+                {
+                    node.Add(ParseEscapeSequence());
                 }
                 else
                 {
@@ -541,6 +551,11 @@ internal class HttpRequestParser
             CurrentToken is { Text: "{" } &&
             CurrentTokenPlus(1) is { Text: "{" };
 
+        private bool IsStartOfEscapeSequence() =>
+            CurrentToken is { Kind: TokenKind.Punctuation } and { Text: @"\" } &&
+            (CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "{" } &&
+            CurrentTokenPlus(2) is { Kind: TokenKind.Punctuation } and { Text: "{" });
+
         private HttpEmbeddedExpressionNode ParseEmbeddedExpression()
         {
             var node = new HttpEmbeddedExpressionNode(_sourceText, _syntaxTree);
@@ -887,6 +902,17 @@ internal class HttpRequestParser
             }
 
             return node;
+        }
+
+        private HttpEscapedCharacterSequenceNode ParseEscapeSequence()
+        {
+            var node = new HttpEscapedCharacterSequenceNode(_sourceText, _syntaxTree);
+
+            ConsumeCurrentTokenInto(node); // parse the first \
+            ConsumeCurrentTokenInto(node); // parse the first { or }
+            ConsumeCurrentTokenInto(node); // parse the second { or }
+
+            return ParseTrailingWhitespace(node);
         }
 
         private bool IsComment()

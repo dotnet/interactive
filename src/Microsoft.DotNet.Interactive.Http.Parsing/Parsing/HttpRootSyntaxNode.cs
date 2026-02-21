@@ -8,6 +8,7 @@ using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Parsing;
+using System.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -53,50 +54,70 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
             if (node.ValueNode is not null && node.DeclarationNode is not null)
             {
                 var embeddedExpressionNodes = node.ValueNode.ChildNodes.OfType<HttpEmbeddedExpressionNode>();
-                if (!embeddedExpressionNodes.Any())
+                var potentialEscapedCharacters = node.ValueNode.ChildNodes.OfType<HttpEscapedCharacterSequenceNode>();
+                if (potentialEscapedCharacters.Any())
                 {
-                    foundVariableValues[node.DeclarationNode.VariableName] = node.ValueNode.Text;
-                    declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, node.ValueNode.Text, HttpBindingResult<string>.Success(Text));
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var child in node.ValueNode.ChildNodesAndTokens)
+                    {
+                        if (child is HttpEscapedCharacterSequenceNode sequenceNode)
+                        {
+                            sb.Append(sequenceNode.UnescapedText);
+                        }
+                        else
+                        {
+                            sb.Append(child.Text);
+                        }
+                    }
+
+                    var value = sb.ToString();
+                    foundVariableValues[node.DeclarationNode.VariableName] = value;
+                    declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value, HttpBindingResult<string>.Success(Text));
+            }
+            else if (!embeddedExpressionNodes.Any())
+            {
+                foundVariableValues[node.DeclarationNode.VariableName] = node.ValueNode.Text;
+                declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, node.ValueNode.Text, HttpBindingResult<string>.Success(Text));
+            }
+            else
+            {
+                var value = node.ValueNode.TryGetValue(node =>
+                {
+                    if (foundVariableValues.TryGetValue(node.Text, out string? stringValue))
+                    {
+                        return node.CreateBindingSuccess(stringValue);
+                    }
+                    else if (bind != null)
+                    {
+                        return bind(node);
+                    }
+                    else
+                    {
+                        return DynamicExpressionUtilities.ResolveExpressionBinding(node, node.Text);
+                    }
+
+                });
+
+                if (value?.Value != null)
+                {
+                    declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
                 }
                 else
                 {
-                    var value = node.ValueNode.TryGetValue(node =>
+                    if(diagnostics is null)
                     {
-                        if (foundVariableValues.TryGetValue(node.Text, out string? stringValue))
+                        diagnostics = value?.Diagnostics;
+                    }
+                    else
+                    {
+                        if (value is not null)
                         {
-                            return node.CreateBindingSuccess(stringValue);
-                        }
-                        else if (bind != null)
-                        {
-                            return bind(node);
-                        }
-                        else
-                        {
-                            return DynamicExpressionUtilities.ResolveExpressionBinding(node, node.Text);
+                            diagnostics.AddRange(value.Diagnostics);
                         }
 
-                    });
-
-                    if (value?.Value != null)
-                    {
-                        declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
-                    } 
-                    else 
-                    {
-                        if(diagnostics is null)
-                        {
-                            diagnostics = value?.Diagnostics;
-                        } 
-                        else
-                        {
-                            if (value is not null)
-                            {
-                                diagnostics.AddRange(value.Diagnostics);
-                            }
-                            
-                        }       
                     }
                 }
+            }
             }
         }
 

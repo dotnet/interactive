@@ -15,6 +15,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
 {
     public HttpRequestNodeSyntaxSpec(
         HttpCommentNodeSyntaxSpec commentNamedRequest,
+        HttpVariableDeclarationAndAssignmentNodeSyntaxSpec variableDeclarationAndAssignment,
         HttpMethodNodeSyntaxSpec method,
         HttpUrlNodeSyntaxSpec url,
         HttpVersionNodeSyntaxSpec version = null,
@@ -36,6 +37,8 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
     }
 
     public HttpCommentNodeSyntaxSpec CommentNamedRequest { get; }
+
+    public HttpVariableDeclarationAndAssignmentNodeSyntaxSpec VariableDeclarationAndAssignment { get; }
 
     public HttpMethodNodeSyntaxSpec Method { get; }
 
@@ -65,6 +68,15 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
 
             CommentNamedRequest.Validate(syntaxNode: commentNode);
         }
+
+        if(!string.IsNullOrEmpty(VariableDeclarationAndAssignment?.Text))
+        {
+            var httpVariableDeclarationAndAssignmentNode = requestNode.ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>().SingleOrDefault();
+
+            httpVariableDeclarationAndAssignmentNode.Should().NotBeNull();
+
+            VariableDeclarationAndAssignment.Validate(httpVariableDeclarationAndAssignmentNode);
+        }   
 
         if (!string.IsNullOrEmpty(Method?.Text))
         {
@@ -141,6 +153,12 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         sb.Append(MaybeLineComment());
         sb.Append(MaybeWhitespace());
 
+        if(VariableDeclarationAndAssignment is not null)
+        {
+            sb.Append(VariableDeclarationAndAssignment);
+            sb.AppendLine();
+        }
+        
         sb.Append(Method);
         sb.Append(" ");
         sb.Append(MaybeWhitespace());
