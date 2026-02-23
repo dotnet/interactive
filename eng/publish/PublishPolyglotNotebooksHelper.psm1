@@ -121,36 +121,27 @@ function PublishStableExtensionAndNuGetPackages {
         "Microsoft.DotNet.Interactive"
     )
 
-    # Run dotnet CLI from outside the repo so global.json in the sources directory
-    # does not force an unavailable SDK during publish-only operations.
-    Push-Location $env:AGENT_TEMPDIRECTORY
-    try {
-        Get-ChildItem "$artifactsPath\packages\Shipping\*.nupkg" -Exclude '*.symbols.nupkg' | ForEach-Object {
-            $nugetPackagePath = $_.FullName
-            $nugetPackageName = $_.Name
+    Get-ChildItem "$artifactsPath\packages\Shipping\*.nupkg" -Exclude '*.symbols.nupkg' | ForEach-Object {
+        $nugetPackagePath = $_.FullName
+        $nugetPackageName = $_.Name
 
-            if ($nugetPackageName -match '^(?<id>.+?)\.(?<version>\d+\.\d+(\.\d+)?(-.*)?)\.nupkg$') {
-                $packageId = $Matches['id']
+        if ($nugetPackageName -match '^(?<id>.+?)\.(?<version>\d+\.\d+(\.\d+)?(-.*)?)\.nupkg$') {
+            $packageId = $Matches['id']
 
-                if ($packagestoPublish -contains $packageId) {
-                    Write-Host "Publishing NuGet package $nugetPackagePath"
-                    if ($simulate) {
-                        Write-Host "Simulated command: dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key *** --no-symbols"
-                    } else {
-                        dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols
-                        if ($LASTEXITCODE -ne 0) {
-                            exit $LASTEXITCODE
-                        }
-                    }
+            if ($packagestoPublish -contains $packageId) {
+                Write-Host "Publishing NuGet package $nugetPackagePath"
+                if ($simulate) {
+                    Write-Host "Simulated command: dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key *** --no-symbols"
                 } else {
-                    Write-Host "Skipping publishing NuGet package $nugetPackagePath"
+                    dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols
+                    if ($LASTEXITCODE -ne 0) {
+                        exit $LASTEXITCODE
+                    }
                 }
+            } else {
+                Write-Host "Skipping publishing NuGet package $nugetPackagePath"
             }
         }
-    }
-    finally {
-        # Always restore the original working directory for subsequent publish steps.
-        Pop-Location
     }
 
     Write-Host "Publishing extension $extension to VS Code Marketplace using Managed Identity..."

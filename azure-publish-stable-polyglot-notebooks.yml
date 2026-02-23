@@ -69,6 +69,12 @@ extends:
             npm install --global @vscode/vsce
           displayName: 'Install VSCE'
 
+        # Install the SDK pinned in global.json so dotnet CLI resolves correctly
+        - task: UseDotNet@2
+          displayName: 'Install .NET SDK from global.json'
+          inputs:
+            useGlobalJson: true
+
         # Authenticate with Azure and publish extension
         - task: AzureCLI@2
           displayName: 'Publish Extension (both insiders and stable) and Publish nuget packages'
