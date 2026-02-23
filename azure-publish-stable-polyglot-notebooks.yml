@@ -69,16 +69,6 @@ extends:
             npm install --global @vscode/vsce
           displayName: 'Install VSCE'
 
-        # Workaround: rename global.json so 'dotnet nuget push' uses any available SDK
-        # instead of failing when the pinned version (e.g. 10.0.103) is not on the agent.
-        - pwsh: |
-            $globalJson = Join-Path '$(Build.SourcesDirectory)' 'global.json'
-            if (Test-Path $globalJson) {
-              Rename-Item $globalJson 'global.json.bak' -Force
-              Write-Host "Renamed global.json to global.json.bak to avoid SDK pin during publish"
-            }
-          displayName: 'Remove global.json SDK pin for publish'
-
         # Authenticate with Azure and publish extension
         - task: AzureCLI@2
           displayName: 'Publish Extension (both insiders and stable) and Publish nuget packages'
