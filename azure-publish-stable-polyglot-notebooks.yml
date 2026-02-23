@@ -57,7 +57,7 @@ extends:
             definition: 743
             buildVersionToDownload: 'specific'
             buildId: '$(resources.pipeline.interactive-ci.runID)'  # Dynamically fetch the latest build ID
-            branchName: '$(resources.pipeline.officialBuildCI.sourceBranch)'
+            branchName: '$(resources.pipeline.interactive-ci.sourceBranch)'
             path: '$(Pipeline.Workspace)/artifacts'  # Specify a clear download path
 
         # List files and folders under ArtifactsDirectory for debugging
@@ -68,6 +68,16 @@ extends:
         - pwsh: |
             npm install --global @vscode/vsce
           displayName: 'Install VSCE'
+
+        # Workaround: rename global.json so 'dotnet nuget push' uses any available SDK
+        # instead of failing when the pinned version (e.g. 10.0.103) is not on the agent.
+        - pwsh: |
+            $globalJson = Join-Path '$(Build.SourcesDirectory)' 'global.json'
+            if (Test-Path $globalJson) {
+              Rename-Item $globalJson 'global.json.bak' -Force
+              Write-Host "Renamed global.json to global.json.bak to avoid SDK pin during publish"
+            }
+          displayName: 'Remove global.json SDK pin for publish'
 
         # Authenticate with Azure and publish extension
         - task: AzureCLI@2
