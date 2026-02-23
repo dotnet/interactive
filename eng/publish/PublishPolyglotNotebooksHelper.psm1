@@ -121,11 +121,7 @@ function PublishStableExtensionAndNuGetPackages {
         "Microsoft.DotNet.Interactive"
     )
 
-    # Run dotnet CLI from outside the repo so global.json in the sources directory
-    # does not force an unavailable SDK during publish-only operations.
-    # Use $HOME rather than $env:TEMP to avoid inheriting any config files
-    # that other processes might have placed in the temp directory.
-    Push-Location $HOME
+    Push-Location $env:AGENT_TEMPDIRECTORY
     try {
         Get-ChildItem "$artifactsPath\packages\Shipping\*.nupkg" -Exclude '*.symbols.nupkg' | ForEach-Object {
             $nugetPackagePath = $_.FullName
