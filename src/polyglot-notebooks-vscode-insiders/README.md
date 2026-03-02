@@ -2,6 +2,15 @@
 
 ## 🚨Polyglot Notebooks will be deprecated March 27th, 2026. For more information on Polyglot Notebooks and .NET Interactive, please read the [announcement](https://github.com/dotnet/interactive/issues/4163).
 
+## **The following paths are no longer supported.**
+
+- src/polyglot-notebooks
+- src/polyglot-notebooks-browser
+- src/polyglot-notebooks-ui-components
+- src/polyglot-notebooks-vscode
+- src/polyglot-notebooks-vscode-common
+- src/polyglot-notebooks-vscode-insiders
+
 The [Polyglot Notebooks extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), powered by [.NET Interactive](https://github.com/dotnet/interactive), brings support for multi-language notebooks to Visual Studio Code. Classic notebook software typically supports notebooks that use only one language at a time. With Polyglot Notebooks, features such as completions, documentation, syntax highlighting, and diagnostics are available for many languages in one notebook. In addition, different cells in the same notebook can run in separate processes or on different machines, allowing a notebook to span local and cloud environments in one combined workflow.
 
 ## Fully Interoperable with Jupyter
