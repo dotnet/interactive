@@ -66,3 +66,25 @@ internal class HttpHeadersNodeSyntaxSpec : SyntaxSpecBase<HttpHeadersNode>
     {
     }
 }
+
+internal class HttpVariableDeclarationAndAssignmentNodeSyntaxSpec : SyntaxSpecBase<HttpVariableDeclarationAndAssignmentNode>
+{
+    public HttpVariableDeclarationAndAssignmentNodeSyntaxSpec(string text, params Action<HttpVariableDeclarationAndAssignmentNode>[] assertions)
+        : base(text, assertions)
+    {
+    }
+
+    public override void Validate(HttpVariableDeclarationAndAssignmentNode syntaxNode)
+    {
+        base.Validate(syntaxNode);
+
+        // Additional validation specific to variable declarations
+        syntaxNode.DeclarationNode.Should().NotBeNull();
+        syntaxNode.AssignmentNode.Should().NotBeNull();
+
+        if (!syntaxNode.GetDiagnostics().Any())
+        {
+            syntaxNode.ValueNode.Should().NotBeNull();
+        }
+    }
+}
