@@ -1,6 +1,12 @@
-# .NET Interactive
+# .NET Interactive and Polyglot Notebooks
 
-## 🚨Polyglot Notebooks will be deprecated March 27th, 2026. For more information on Polyglot Notebooks and .NET Interactive, please read the [announcement](https://github.com/dotnet/interactive/issues/4163)
+## 🚨Polyglot Notebooks will be deprecated March 27th, 2026
+
+## 🚨.NET Interactive will be deprecated April 24th, 2026
+
+## This repository will be archived on April 24th, 2026
+
+### For more information on Polyglot Notebooks and .NET Interactive, please read the [announcement](https://github.com/dotnet/interactive/issues/4163)
 
 ## **The following paths are no longer supported.**
 
