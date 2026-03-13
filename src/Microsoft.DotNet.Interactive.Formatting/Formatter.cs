@@ -117,6 +117,7 @@ public static partial class Formatter
         _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)JsonFormatter.DefaultFormatters).Reverse().ToArray());
         _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)PlainTextSummaryFormatter.DefaultFormatters).Reverse().ToArray());
         _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)PlainTextFormatter.DefaultFormatters).Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)BinaryFormatter.DefaultFormatters).Reverse().ToArray());
 
         _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
 
