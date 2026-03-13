@@ -54,7 +54,7 @@
     "mocha-trx-reporter": "3.3.1",
     "node-fetch": "2.6.7",
     "requirejs": "2.3.6",
-    "rollup": "3.26.1",
+    "rollup": "3.30.0",
     "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-typescript2": "0.35.0",
