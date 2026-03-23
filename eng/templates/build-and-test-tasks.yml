@@ -13,6 +13,11 @@ steps:
     inputs:
       versionSpec: $(NodeJSVersion)
 
+  - task: npmAuthenticate@0
+    displayName: Authenticate npm feeds
+    inputs:
+      workingFile: src/polyglot-notebooks/.npmrc
+
   - script: |
       echo "npm version (before):"
       npm --version
