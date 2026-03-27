@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <NoWarn>$(NoWarn);2003;57</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
     <LangVersion>preview</LangVersion>
@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Compile Include="FsAutoComplete\Utils.fs" />
+    <Compile Include="FsAutoComplete\UntypedAstUtils.fs" />
     <Compile Include="FsAutoComplete\TypedAstUtils.fs" />
     <Compile Include="FsAutoComplete\TypedAstPatterns.fs" />
     <Compile Include="FsAutoComplete\Lexer.fs" />

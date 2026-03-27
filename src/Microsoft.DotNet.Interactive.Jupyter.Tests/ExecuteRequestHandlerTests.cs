@@ -403,9 +403,9 @@ f();"));
 
         JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == true);
         JupyterMessageSender.PubSubMessages
-            .OfType<Protocol.DisplayData>()
+            .OfType<Protocol.Stream>()
             .Should()
-            .Contain(s => s.Data.ContainsKey("text/html") && s.Data["text/html"].ToString().Contains("System.Security.SecureString"));
+            .Contain(s => s.Name == Protocol.Stream.StandardOutput && s.Text.Contains("System.Security.SecureString"));
     }
 
     [Fact]

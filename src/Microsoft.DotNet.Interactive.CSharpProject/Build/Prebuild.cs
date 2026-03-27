@@ -502,7 +502,7 @@ public class Prebuild
         var builder = new PrebuildBuilder("console");
         builder.UseTemplate("console");
         builder.UseLanguageVersion("latest");
-        builder.AddPackageReference("Newtonsoft.Json", "13.0.3");
+        builder.AddPackageReference("Newtonsoft.Json", "13.0.4");
         builder.EnableBuild = enableBuild;
         return builder.GetPrebuild();
     }

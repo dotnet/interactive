@@ -393,6 +393,39 @@ This error indicates that a call to a .NET Interactive formatting API such as `D
 
 The error is shown because a formatted value from the .NET Interactive kernel has been formatted using a MIME type that VS Code doesn't know how to render. VS Code can only render notebook outputs in MIME types for which there's an installed [notebook renderer](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer). Notebook renderers are independent of the kernel and can be [installed from the Visual Studio Marketplace](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer).  
 
+### `Unrecognized parameter name '--kernel-name'` when using `#!connect mssql`
+
+This error occurs when the version of `Microsoft.DotNet.Interactive.SqlServer` doesn't match the version of .NET Interactive you're running. When using a wildcard version specifier like `*-*`, you might load a version that's incompatible with your current Polyglot Notebooks extension.
+
+To fix this:
+
+1. Run `#!about` in a cell to check your .NET Interactive version.
+
+2. Use the **Library version** number (the part before the `+`) to get the matching package version. For example, given this output from `#!about`:
+
+```console
+.NET Interactive
+
+© 2020-2025 Microsoft Corporation
+
+Version: 1.0.617701+fb2fd8022ab96c55fbaf34d5e1c8c61cb01690fc
+
+Library version: 1.0.0-beta.25177.1+fb2fd8022ab96c55fbaf34d5e1c8c61cb01690fc
+                 ^----------------^
+```
+
+The underlined section is the version that should work with your current version of .NET Interactive, e.g.:
+
+```csharp
+#r "nuget:Microsoft.DotNet.Interactive.SqlServer,1.0.0-beta.25177.1"
+```
+
+Replace `1.0.0-beta.25177.1` with the Library version number you see in your `#!about` output.
+
+**Important:** The `#r nuget` directive and the `#!connect mssql` command must be in separate cells. The notebook validates syntax before running code, but the `#!connect mssql` command is only recognized after the package loads.
+
+**Note:** Pre-release versions of Polyglot Notebooks use different package versions than the stable release. Pre-release packages aren't available on nuget.org but can be loaded from the Azure DevOps feed: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+
 ### Diagnostic logs
 
 You can enable diagnostic logging by editing the Polyglot Notebooks extension's settings for `Kernel Transport Args` and adding the following command line arguments:

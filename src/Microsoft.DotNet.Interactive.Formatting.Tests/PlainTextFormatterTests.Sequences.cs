@@ -279,13 +279,15 @@ TheWidgets: Widget[]
 
             var formatted  = instance.ToDisplayString(PlainTextFormatter.MimeType);
 
-            formatted.Should().Match("""
+            var expected = """
                 ClassWithPropertiesThatIsAlsoIEnumerable
                       Property: cherry
                       (values): *
                         - apple
                         - banana
-                """);
+                """.ReplaceLineEndings();
+
+            formatted.Should().Match(expected);
         }
 
         [Fact]
@@ -298,12 +300,13 @@ TheWidgets: Widget[]
 
             var formatted  = instance.ToDisplayString(PlainTextFormatter.MimeType);
 
-
-            formatted.Should().Be("""
+            var expected = """
                 ClassWithPropertiesThatIsAlsoIEnumerable<String>
                       Property: fig
                       (values): [ durian, elderberry ]
-                """);
+                """.ReplaceLineEndings();
+
+            formatted.Should().Be(expected);
         }
     }
 }

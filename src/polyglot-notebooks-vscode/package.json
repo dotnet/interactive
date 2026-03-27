@@ -78,7 +78,7 @@
         ]
       },
       {
-        "type": "polyglot-nortebook-window",
+        "type": "polyglot-notebook-window",
         "displayName": "Polyglot Notebook",
         "selector": []
       }

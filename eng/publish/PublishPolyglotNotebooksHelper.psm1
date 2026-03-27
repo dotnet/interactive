@@ -1,3 +1,22 @@
+function FindChildItem {
+    param (
+        [string]$pattern
+    )
+
+    $childItem = Get-ChildItem $pattern | Select-Object -First 1
+    Write-Host "Found extension: $childItem"
+
+    $fileSize = $childItem.Length
+    Write-Host "File Size: $fileSize bytes"
+
+    $hash = Get-FileHash -Path $childItem.FullName -Algorithm SHA256
+    $hashBytes = [System.Text.Encoding]::UTF8.GetBytes($hash.Hash)
+    $base64Hash = [System.Convert]::ToBase64String($hashBytes)
+    Write-Host "File Hash: $base64Hash"
+
+    return $childItem
+}
+
 function PublishInsidersExtension {
     param (
         [string]$artifactsPath,
@@ -7,16 +26,13 @@ function PublishInsidersExtension {
     Write-Host "vscode target: insiders"
 
     Write-Host "Find extension vsix..."
-    $extension = Get-ChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
-    Write-Host "Found extension: $extension"
+    $extension = FindChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.vsix" 
 
     Write-Host "Find extension manifest..."
-    $manifest = Get-ChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.manifest" | Select-Object -First 1
-    Write-Host "Found extension: $manifest"
+    $manifest = FindChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.manifest"
 
     Write-Host "Find extension signature..."
-    $signature = Get-ChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.signature.p7s" | Select-Object -First 1
-    Write-Host "Found extension: $signature"
+    $signature = FindChildItem "$artifactsPath\vscode\insiders\dotnet-interactive-vscode-*.signature.p7s"
 
     Write-Host "Verify the extension..."
     if ($simulate) {
@@ -25,6 +41,21 @@ function PublishInsidersExtension {
         . "$PSScriptRoot\VerifyVSCodeExtension.ps1" -extensionPath $extension
         if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
+        }
+    }
+
+    Write-Host "Verify the extension signature..."
+    $output = vsce verify-signature --packagePath $extension --manifestPath $manifest --signaturePath $signature
+
+    # This is a brittle check but the command does not return a non-zero exit code for failed validation.
+    # Opened https://github.com/microsoft/vscode-vsce/issues/1192 to track this.
+    if ($output.Contains('Signature verification result: Success')) {
+        Write-Host "Signature verification succeeded for $extension"
+    } else {
+        Write-Host ($output | Out-String)
+        Write-Host "##[error]Signature verification failed for $extension"
+        if (!$simulate) {
+            exit 1
         }
     }
 
@@ -46,16 +77,13 @@ function PublishStableExtensionAndNuGetPackages {
     Write-Host "vscode target: stable"
 
     Write-Host "Find extension vsix..."
-    $extension = Get-ChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
-    Write-Host "Found extension: $extension"
+    $extension = FindChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.vsix"
 
     Write-Host "Find extension manifest..."
-    $manifest = Get-ChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.manifest" | Select-Object -First 1
-    Write-Host "Found extension: $manifest"
+    $manifest = FindChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.manifest"
 
     Write-Host "Find extension signature..."
-    $signature = Get-ChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.signature.p7s" | Select-Object -First 1
-    Write-Host "Found extension: $signature"
+    $signature = FindChildItem "$artifactsPath\vscode\stable\dotnet-interactive-vscode-*.signature.p7s"
 
     Write-Host "Verify the extension..."
     if ($simulate) {

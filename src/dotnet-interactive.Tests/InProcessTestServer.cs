@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -10,13 +9,15 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using CommandLineParser = Microsoft.DotNet.Interactive.App.CommandLine.CommandLineParser;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
 internal class InProcessTestServer : IDisposable
 {
-    private Lazy<TestServer> _host;
+    private Lazy<IHost> _host;
+    private Lazy<TestServer> _testServer;
     private readonly ServiceCollection _serviceCollection = new();
 
     public static async Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
@@ -29,11 +30,16 @@ internal class InProcessTestServer : IDisposable
             startupOptions =>
             {
                 servicesSetup?.Invoke(server._serviceCollection);
-                var builder = Program.ConstructWebHostBuilder(
+                var hostBuilder = Program.ConstructWebHostBuilder(
                     startupOptions,
                     server._serviceCollection);
 
-                server._host = new Lazy<TestServer>(() => new TestServer(builder));
+                hostBuilder.ConfigureWebHost(webHost => webHost.UseTestServer());
+
+                var host = hostBuilder.Build();
+                host.Start();
+                server._host = new Lazy<IHost>(() => host);
+                server._testServer = new Lazy<TestServer>(() => host.GetTestServer());
                 completionSource.SetResult(true);
             });
 
@@ -54,7 +60,7 @@ internal class InProcessTestServer : IDisposable
 
     public FrontendEnvironment FrontendEnvironment => _host.Value.Services.GetRequiredService<Kernel>().FrontendEnvironment;
 
-    public HttpClient HttpClient => _host.Value.CreateClient();
+    public HttpClient HttpClient => _testServer.Value.CreateClient();
 
     public Kernel Kernel => _host.Value.Services.GetService<Kernel>();
 
@@ -63,7 +69,9 @@ internal class InProcessTestServer : IDisposable
         KernelCommandEnvelope.RegisterDefaults();
         KernelEventEnvelope.RegisterDefaults();
         Kernel?.Dispose();
-        _host.Value.Dispose();
+        _testServer?.Value?.Dispose();
+        _host?.Value?.Dispose();
+        _testServer = null;
         _host = null;
     }
 }

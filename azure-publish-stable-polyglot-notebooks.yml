@@ -57,7 +57,7 @@ extends:
             definition: 743
             buildVersionToDownload: 'specific'
             buildId: '$(resources.pipeline.interactive-ci.runID)'  # Dynamically fetch the latest build ID
-            branchName: '$(resources.pipeline.officialBuildCI.sourceBranch)'
+            branchName: '$(resources.pipeline.interactive-ci.sourceBranch)'
             path: '$(Pipeline.Workspace)/artifacts'  # Specify a clear download path
 
         # List files and folders under ArtifactsDirectory for debugging
@@ -68,6 +68,12 @@ extends:
         - pwsh: |
             npm install --global @vscode/vsce
           displayName: 'Install VSCE'
+
+        # Install the SDK pinned in global.json so dotnet CLI resolves correctly
+        - task: UseDotNet@2
+          displayName: 'Install .NET SDK from global.json'
+          inputs:
+            useGlobalJson: true
 
         # Authenticate with Azure and publish extension
         - task: AzureCLI@2

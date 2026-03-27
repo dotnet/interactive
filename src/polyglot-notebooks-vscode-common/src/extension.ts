@@ -70,9 +70,6 @@ const disposables: (() => void)[] = [];
 let surveryBanner: SurveyBanner;
 
 export async function activate(context: vscode.ExtensionContext) {
-    const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
-    const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
-    const minDotNetSdkVersion = '9.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : diagnostics'));
     const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
@@ -88,7 +85,30 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    try {
+        await activateCore(context, diagnosticsChannel);
+    } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : `${e}`;
+        diagnosticsChannel.appendLine(`Extension activation failed: ${errorMessage}`);
+        notebookSerializers.createAndRegisterFallbackNotebookSerializers(context, errorMessage);
+    }
+}
+
+async function activateCore(context: vscode.ExtensionContext, diagnosticsChannel: OutputChannelAdapter) {
+    const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
+    const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
+    const minDotNetSdkVersion = '10.0';
+
     await waitForSdkPackExtension();
+
+    // show deprecation notice on first activation
+    const deprecationShownKey = 'polyglotNotebooks.deprecationNoticeShown';
+    const hasShownDeprecation = context.globalState.get<boolean>(deprecationShownKey, false);
+    if (!hasShownDeprecation) {
+        const helpServiceInstance = new helpService.HelpService(context);
+        await helpServiceInstance.showHelpPage(helpService.Deprecation);
+        await context.globalState.update(deprecationShownKey, true);
+    }
 
     // this must happen early, because some following functions use the acquisition command
     await registerAcquisitionCommands(context, diagnosticsChannel);
@@ -108,7 +128,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download/dotnet/${minDotNetSdkVersion}`);
     }
 
-    if (showHelpPage) {
+    if (showHelpPage && hasShownDeprecation) {
         const helpServiceInstance = new helpService.HelpService(context);
         await helpServiceInstance.showHelpPageAndThrow(helpService.DotNetVersion);
     }

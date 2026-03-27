@@ -6,6 +6,7 @@ using Pocket;
 using System;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.DotNet.Interactive.CSharpProject.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -485,7 +486,7 @@ public static class Hello
         result.GetFeature<Diagnostics>().Should().BeEmpty();
     }
 
-    [Fact]
+    [FactSkipCI("Network isolation issues in CI builds")]
     public async Task When_compile_diagnostics_are_outside_of_active_file_then_they_are_omitted()
     {
         #region bufferSources
@@ -545,7 +546,7 @@ namespace FibonacciTest
         result.GetFeature<Diagnostics>().Should().BeEmpty();
     }
 
-    [Fact]
+    [FactSkipCI("Network isolation issues in CI builds")]
     public async Task When_diagnostics_are_outside_of_active_file_then_they_are_omitted()
     {
         #region bufferSources
@@ -913,20 +914,22 @@ namespace FibonacciTest
     {
         var server = GetCodeRunner();
 
-        var workspace = Workspace.FromSource(@"
-using System;
+        var workspace = Workspace.FromSource(
+            """
+            using System;
 
-public static class Hello
-{
-    public static void Main()
-    {
-        var i1 = 3;  // number 3 from beginning
-        var i2 = ^4; // number 4 from end
-        var a = new[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        Console.WriteLine($""{a[i1]}, {a[i2]}"");
-    }
-}
-", workspaceType: "console");
+            public static class Hello
+            {
+                public static void Main()
+                {
+                    var i1 = 3;  // number 3 from beginning
+                    var i2 = ^4; // number 4 from end
+                    var a = new[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                    Console.WriteLine($"{a[i1]}, {a[i2]}");
+                }
+            }
+
+            """, workspaceType: "console");
 
         var result = await server.RunAsync(new WorkspaceRequest(workspace));
 

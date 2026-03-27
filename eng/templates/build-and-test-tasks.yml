@@ -13,13 +13,18 @@ steps:
     inputs:
       versionSpec: $(NodeJSVersion)
 
+  - task: npmAuthenticate@0
+    displayName: Authenticate npm feeds
+    inputs:
+      workingFile: src/polyglot-notebooks/.npmrc
+
   - script: |
       echo "npm version (before):"
       npm --version
     displayName: Log npm version (before)
 
   - script: |
-      npm install -g npm@11.6.0
+      npm install -g npm@11.6.0 --globalconfig $(Build.SourcesDirectory)\src\polyglot-notebooks\.npmrc
     displayName: Install npm v11.6.0
 
   - script: |
@@ -49,6 +54,7 @@ steps:
     env:
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
       DOTNET_INTERACTIVE_FRONTEND_NAME: CI
+      DOTNET_INTERACTIVE_SIGN_TYPE: ${{ parameters.signType }}
 
   - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
     displayName: Test / Blame
@@ -56,6 +62,7 @@ steps:
     env:
       BUILDCONFIG: $(_BuildConfig)
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
+      DOTNET_INTERACTIVE_SIGN_TYPE: ${{ parameters.signType }}
     condition: ne(variables['SkipTests'], 'true')
 
   # publish VS Code and npm test results
@@ -75,7 +82,7 @@ steps:
       workingDirectory: "$(Build.SourcesDirectory)/src"
       pwsh: true
 
-  - script: dotnet build $(Build.SourcesDirectory)\eng\msbuild\signVsix -bl -v:normal
+  - script: dotnet build $(Build.SourcesDirectory)\eng\msbuild\signVsix -bl -v:normal /p:OutDir="$(Build.ArtifactStagingDirectory)\vscode"
     displayName: Sign VS Code Extensions
     env:
       SignType: ${{ parameters.signType }}
@@ -131,6 +138,7 @@ steps:
     env:
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
       DOTNET_INTERACTIVE_FRONTEND_NAME: CI
+      DOTNET_INTERACTIVE_SIGN_TYPE: ${{ parameters.signType }}
 
   - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
     displayName: Test / Blame
@@ -138,6 +146,7 @@ steps:
     env:
       BUILDCONFIG: $(_BuildConfig)
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
+      DOTNET_INTERACTIVE_SIGN_TYPE: ${{ parameters.signType }}
     condition: ne(variables['SkipTests'], 'true')
 
   # Publish VS Code and npm test results
