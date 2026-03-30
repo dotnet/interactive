@@ -35,13 +35,16 @@ public class PrebuildBuilder
 
     public DirectoryInfo Directory { get; }
 
+    public string NuGetConfigContent { get; set; }
+
     public void UseTemplate(string template, string projectName = null, string language = null)
     {
         PrebuildInitializer = new PrebuildInitializer(
             template,
             projectName ?? PrebuildName,
             language,
-            RunAfterCreateActionsAsync);
+            RunAfterCreateActionsAsync,
+            NuGetConfigContent);
     }
 
     public void AddPackageReference(string packageId, string version = null, string restoreSources = null)

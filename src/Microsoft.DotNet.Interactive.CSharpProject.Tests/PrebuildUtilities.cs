@@ -82,7 +82,7 @@ public static class PrebuildUtilities
         [CallerMemberName] string testName = null,
         IScheduler buildThrottleScheduler = null)
     {
-        var prebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(true);
+        var prebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(enableBuild: true, nugetConfigContent: PrebuildFixture.NuGetConfigContent);
         return await prebuild.CreateBuildableCopy(testName, buildThrottleScheduler);
     }
 

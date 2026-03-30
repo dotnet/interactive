@@ -9,12 +9,23 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
 public class PrebuildFixture : IAsyncLifetime
 {
+    internal const string NuGetConfigContent =
+        """
+        <?xml version="1.0" encoding="utf-8"?>
+        <configuration>
+          <packageSources>
+            <clear />
+            <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
+          </packageSources>
+        </configuration>
+        """;
+
     public async Task InitializeAsync()
     {
-        var consolePrebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(true);
+        var consolePrebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(enableBuild: true, nugetConfigContent: NuGetConfigContent);
         await consolePrebuild.EnsureReadyAsync();
 
-        consolePrebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(false);
+        consolePrebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(enableBuild: false, nugetConfigContent: NuGetConfigContent);
         await consolePrebuild.EnsureReadyAsync();
         Prebuild = consolePrebuild;
     }

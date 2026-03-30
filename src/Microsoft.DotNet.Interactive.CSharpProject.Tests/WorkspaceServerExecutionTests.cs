@@ -6,7 +6,6 @@ using Pocket;
 using System;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.Interactive.CSharpProject.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -486,7 +485,7 @@ public static class Hello
         result.GetFeature<Diagnostics>().Should().BeEmpty();
     }
 
-    [FactSkipCI("Network isolation issues in CI builds")]
+    [Fact]
     public async Task When_compile_diagnostics_are_outside_of_active_file_then_they_are_omitted()
     {
         #region bufferSources
@@ -546,7 +545,7 @@ namespace FibonacciTest
         result.GetFeature<Diagnostics>().Should().BeEmpty();
     }
 
-    [FactSkipCI("Network isolation issues in CI builds")]
+    [Fact]
     public async Task When_diagnostics_are_outside_of_active_file_then_they_are_omitted()
     {
         #region bufferSources
