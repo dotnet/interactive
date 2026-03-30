@@ -1,4 +1,7 @@
 Microsoft.DotNet.Interactive.Formatting
+  public static class BinaryFormatter
+    public static System.String FormatBytes(System.Byte[] bytes)
+    public static System.Void FormatBytesTo(System.Byte[] bytes, System.IO.TextWriter writer)
   public static class Destructurer
     public static IDestructurer GetOrCreate(System.Type type)
   public class Destructurer<T>, IDestructurer<T>, IDestructurer
