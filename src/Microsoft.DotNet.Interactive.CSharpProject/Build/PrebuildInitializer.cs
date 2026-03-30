@@ -16,7 +16,8 @@ public class PrebuildInitializer : IPrebuildInitializer
         string template,
         string projectName,
         string language = null,
-        Func<DirectoryInfo, Task> afterCreate = null)
+        Func<DirectoryInfo, Task> afterCreate = null,
+        string nugetConfigContent = null)
     {
         if (string.IsNullOrWhiteSpace(template))
         {
@@ -33,6 +34,7 @@ public class PrebuildInitializer : IPrebuildInitializer
         Template = template;
         ProjectName = projectName;
         Language = language ?? GetLanguageFromProjectName(ProjectName);
+        NuGetConfigContent = nugetConfigContent;
     }
 
     public string Template { get; }
@@ -40,6 +42,8 @@ public class PrebuildInitializer : IPrebuildInitializer
     public string Language { get; }
 
     public string ProjectName { get; }
+
+    public string NuGetConfigContent { get; }
 
     public virtual async Task InitializeAsync(DirectoryInfo directory)
     {
@@ -50,6 +54,11 @@ public class PrebuildInitializer : IPrebuildInitializer
         var targetsFilePath = Path.Combine(directory.FullName, Prebuild.DirectoryBuildTargetFilename);
 
         await File.WriteAllTextAsync(targetsFilePath, Prebuild.DirectoryBuildTargetsContent);
+
+        if (NuGetConfigContent is not null)
+        {
+            await File.WriteAllTextAsync(Path.Combine(directory.FullName, "NuGet.config"), NuGetConfigContent);
+        }
 
         await dotnet.New("globaljson", "--force");
 

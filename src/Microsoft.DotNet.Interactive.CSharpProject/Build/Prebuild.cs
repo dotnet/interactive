@@ -497,9 +497,10 @@ public class Prebuild
         set => _isInitialized = value;
     }
 
-    public static async Task<Prebuild> GetOrCreateConsolePrebuildAsync(bool enableBuild = false)
+    public static async Task<Prebuild> GetOrCreateConsolePrebuildAsync(bool enableBuild = false, string nugetConfigContent = null)
     {
         var builder = new PrebuildBuilder("console");
+        builder.NuGetConfigContent = nugetConfigContent;
         builder.UseTemplate("console");
         builder.UseLanguageVersion("latest");
         builder.AddPackageReference("Newtonsoft.Json", "13.0.4");

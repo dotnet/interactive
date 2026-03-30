@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
-using Microsoft.DotNet.Interactive.CSharpProject.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -199,7 +198,7 @@ namespace FibonacciTest
         result.Signatures.Should().Contain(signature => signature.Label == "void Console.WriteLine(string format, params object?[]? arg)");
     }
 
-    [FactSkipCI("Network isolation issues in CI builds")]
+    [Fact]
     public async Task Get_signature_help_for_jtoken()
     {
         #region bufferSources
@@ -310,7 +309,7 @@ namespace FibonacciTest
         #endregion
 
         var (processed, position) = CodeManipulation.ProcessMarkup(generator);
-        var prebuild = await PrebuildUtilities.CreateBuildableCopy(await Prebuild.GetOrCreateConsolePrebuildAsync(false));
+        var prebuild = await PrebuildUtilities.CreateBuildableCopy(await Prebuild.GetOrCreateConsolePrebuildAsync(enableBuild: false, nugetConfigContent: PrebuildFixture.NuGetConfigContent));
         var workspace = new Workspace(workspaceType: prebuild.Name, buffers: new[]
         {
             new Buffer("Program.cs", program),
