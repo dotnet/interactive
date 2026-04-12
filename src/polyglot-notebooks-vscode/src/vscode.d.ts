@@ -1073,7 +1073,7 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * Represents theme specific rendeirng styles for {@link ThemableDecorationRenderOptions.before before} and
+	 * Represents theme specific rendering styles for {@link ThemableDecorationRenderOptions.before before} and
 	 * {@link ThemableDecorationRenderOptions.after after} the content of text decorations.
 	 */
 	export interface ThemableDecorationAttachmentRenderOptions {
@@ -2479,7 +2479,7 @@ declare module 'vscode' {
 		static readonly SourceFixAll: CodeActionKind;
 
 		/**
-		 * Base kind for all code actions applying to the enitre notebook's scope. CodeActionKinds using
+		 * Base kind for all code actions applying to the entire notebook's scope. CodeActionKinds using
 		 * this should always begin with `notebook.`
 		 *
 		 * This requires that new CodeActions be created for it and contributed via extensions.
@@ -6506,7 +6506,7 @@ declare module 'vscode' {
 			workspaceValue?: T;
 
 			/**
-			 * The workpace-folder-specific value.
+			 * The workspace-folder-specific value.
 			 */
 			workspaceFolderValue?: T;
 
@@ -15615,7 +15615,7 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * Namespace for source control mangement.
+	 * Namespace for source control management.
 	 */
 	export namespace scm {
 
@@ -15929,7 +15929,7 @@ declare module 'vscode' {
 	export type DebugAdapterDescriptor = DebugAdapterExecutable | DebugAdapterServer | DebugAdapterNamedPipeServer | DebugAdapterInlineImplementation;
 
 	/**
-	 * A debug adaper factory that creates {@link DebugAdapterDescriptor debug adapter descriptors}.
+	 * A debug adapter factory that creates {@link DebugAdapterDescriptor debug adapter descriptors}.
 	 */
 	export interface DebugAdapterDescriptorFactory {
 		/**
@@ -15983,7 +15983,7 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * A debug adaper factory that creates {@link DebugAdapterTracker debug adapter trackers}.
+	 * A debug adapter factory that creates {@link DebugAdapterTracker debug adapter trackers}.
 	 */
 	export interface DebugAdapterTrackerFactory {
 		/**
@@ -17992,7 +17992,7 @@ declare module 'vscode' {
 		readonly value: T;
 
 		/**
-		 * Creates a new telementry trusted value.
+		 * Creates a new telemetry trusted value.
 		 *
 		 * @param value A value to trust
 		 */
@@ -18000,7 +18000,7 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * A telemetry logger which can be used by extensions to log usage and error telementry.
+	 * A telemetry logger which can be used by extensions to log usage and error telemetry.
 	 *
 	 * A logger wraps around an {@link TelemetrySender sender} but it guarantees that
 	 * - user settings to disable or tweak telemetry are respected, and that

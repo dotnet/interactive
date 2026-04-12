@@ -553,7 +553,7 @@ public partial class PSKernelHostUserInterface
                 hotKeyString = label.Remove(andIndex, 1).Trim();
             }
 
-            // The question mark character is already taken for diplaying help.
+            // The question mark character is already taken for displaying help.
             if (hotKeyChar == '?')
             {
                 throw new ArgumentException(

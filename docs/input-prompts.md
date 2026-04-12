@@ -169,5 +169,5 @@ The following command will run a notebook (called `parameters.ipynb`) and write 
 
 Note that the `--input` option is specified more than once.
 
-For more information about usng .NET REPL, see the GitHub [project](https://github.com/jonsequitur/dotnet-repl) page.
+For more information about using .NET REPL, see the GitHub [project](https://github.com/jonsequitur/dotnet-repl) page.
 

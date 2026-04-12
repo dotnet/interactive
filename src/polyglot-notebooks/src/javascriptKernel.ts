@@ -141,7 +141,7 @@ export class JavascriptKernel extends Kernel {
                 }
             }
         } catch (e) {
-            Logger.default.error(`error scanning globla variables : ${e}`);
+            Logger.default.error(`error scanning global variables : ${e}`);
         }
 
         return result;

@@ -276,7 +276,7 @@ public partial class HttpParserTests
 
         private static IEnumerable<HttpVersionNodeSyntaxSpec> InvalidVersions()
         {
-            // Misspellled
+            // Misspelled
             yield return new("HTPT");
 
             // The space is invalid
