@@ -149,7 +149,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         // and we return a dictionary for JSON formatting keyed by that mime type
         // 
         // In the case of DiagnosticsProduced however there are multiple entries, one
-        // for each diagnsotic, all with the same type
+        // for each diagnostic, all with the same type
         Dictionary<string, object> GetFormattedValuesByMimeType()
         {
             return

@@ -515,7 +515,7 @@ public class PowerShellKernel :
     private static bool IsCompleteSubmission(string code, out ParseError[] errors)
     {
         // Parse the PowerShell script. If there are any parse errors, check if the input was incomplete.
-        // We only need to check if the first ParseError has incomplete input. This is consistant with
+        // We only need to check if the first ParseError has incomplete input. This is consistent with
         // what PowerShell itself does today.
         Parser.ParseInput(code, out _, out errors);
         return errors.Length == 0 || !errors[0].IncompleteInput;

@@ -10,7 +10,7 @@
   temporarily renaming it before the `PackageReleasePackages` target and restoring it's name after.  The same thing
   is done for the symbol packages (`*.symbols.nupkg`), too.
 
-  To work around https://github.com/dotnet/arcade/issues/6616 we also have to artifically ensure the variable
+  To work around https://github.com/dotnet/arcade/issues/6616 we also have to artificially ensure the variable
   `$(PreReleaseVersionLabel)` is set.
   -->
 

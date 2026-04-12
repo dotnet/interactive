@@ -1480,7 +1480,7 @@ public partial class HttpKernelTests
     }
 
     [Fact]
-    public async Task can_bind_local_datetime_with_additonal_spaces()
+    public async Task can_bind_local_datetime_with_additional_spaces()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>

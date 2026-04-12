@@ -47,5 +47,5 @@ The vast majority of the code is shared between the regular and insiders version
 `src/polyglot-notebooks-common/` directory.  To enable the `src/polyglot-notebooks-vscode/` and `src/polyglot-notebooks-vscode-insiders/` directories to build, however, symlinks were added to
 properly pull the common files into the source tree under `<extension-root>/src/vscode-common`.
 
-If you have git configured to handel symlinks then you're good to go.  If not, you'll need to run the script
+If you have git configured to handle symlinks then you're good to go.  If not, you'll need to run the script
 `.\ensure-symlinks.ps1` whenever you switch from a branch that previously didn't have the symlinks.
