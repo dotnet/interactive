@@ -32,7 +32,7 @@
     "@microsoft/signalr": "7.0.7",
     "rxjs": "7.5.6",
     "tslib": "2.4.0",
-    "uuid": "8.3.2",
+    "uuid": "14.0.0",
     "vscode-uri": "3.0.6"
   },
   "devDependencies": {
